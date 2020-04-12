@@ -14,10 +14,22 @@ import java.util.List;
 @Service
 public class StyleNandaCrawlingService {
 
-    private static String url = "https://www.stylenanda.com/product/list.html?cate_no=1902&page=1";
+    private static String url = "https://www.stylenanda.com/product/list.html?cate_no=1902&page=";
 
-    public List<Product> crawlAllProducts() throws IOException {
-        Document doc = Jsoup.connect(url).get();
+    public List<Product> crawAllProducts() throws IOException {
+        List<Product> productList;
+        List<Product> allProductList = new ArrayList<>();
+
+        for(int i = 1;; i++){
+            productList = crawlAllProductsInSinglePage(i);
+            if(productList.size() == 0) break;
+            allProductList.addAll(productList);
+        }
+        return allProductList;
+    }
+
+    public List<Product> crawlAllProductsInSinglePage(final int page) throws IOException {
+        Document doc = Jsoup.connect(url + page).get();
 
         List<Product> productList = new ArrayList<>();
 

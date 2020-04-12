@@ -21,6 +21,6 @@ public class StyleNandaCrawlingController {
 
     @GetMapping("")
     List<Product> getAllProducts() throws IOException {
-        return styleNandaCrawlingService.crawlAllProducts();
+        return styleNandaCrawlingService.crawAllProducts();
     }
 }
