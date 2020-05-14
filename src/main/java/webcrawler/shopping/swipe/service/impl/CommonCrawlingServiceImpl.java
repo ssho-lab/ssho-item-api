@@ -140,7 +140,7 @@ public class CommonCrawlingServiceImpl implements CommonCrawlingService {
     public void updateAll(final List<Item> itemList){
         itemRepository.deleteAll();
         itemRepository.saveAll(itemList);
-        log.info("updated");
+
     }
 
     public List<Item> get100Items(){

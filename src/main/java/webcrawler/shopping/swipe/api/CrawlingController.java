@@ -29,7 +29,8 @@ public class CrawlingController {
         this.commonCrawlingService = commonCrawlingService;
     }
 
-    @Scheduled(fixedDelay = 1000000)
+    // 1시간에 한 번으로 스케쥴링
+    @Scheduled(cron = "0 */1 * * *")
     public void updateItems() throws IOException {
 
         List<Item> allProductList = new ArrayList<>();
