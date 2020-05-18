@@ -1,7 +1,5 @@
 package webcrawler.shopping.swipe.config;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,8 +16,6 @@ import java.util.Arrays;
 @Configuration
 @EnableWebSecurity
 public class CorsConfig extends WebSecurityConfigurerAdapter {
-
-    protected Logger logger = LogManager.getLogger(this.getClass());
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {

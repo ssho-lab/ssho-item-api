@@ -1,10 +1,14 @@
 package webcrawler.shopping.swipe.api;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import webcrawler.shopping.swipe.Item;
+
+import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.service.impl.CommonCrawlingServiceImpl;
 import webcrawler.shopping.swipe.service.impl.StyleNandaCrawlingServiceImpl;
 import webcrawler.shopping.swipe.service.impl.VivastudioCrawlingServiceImpl;
@@ -13,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/item")
 public class CrawlingController {
@@ -29,28 +34,34 @@ public class CrawlingController {
         this.commonCrawlingService = commonCrawlingService;
     }
 
-    // 1시간에 한 번으로 스케쥴링
-    @Scheduled(cron = "0 */1 * * *")
+    /**
+     * 전체 쇼핑몰 데이터 크롤링 + DB 업데이트
+     * 1시간에 한 번으로 스케쥴링
+     * @throws IOException
+     */
+    @Scheduled(cron = "0 */1 * * * *")
     public void updateItems() throws IOException {
-
         List<Item> allProductList = new ArrayList<>();
-
-        for(int i = 1; i < 2; i++) {
-            List<Item> productList = styleNandaCrawlingService.crawlAllProductsInSinglePage(i);
-            if(productList.size() == 0) break;
-            allProductList.addAll(productList);
-        }
-
-        for(int i = 1; i < 2; i++) {
-            List<Item> productList = vivastudioCrawlingService.crawlAllProductsInSinglePage(i);
-            if(productList.size() == 0) break;
-            allProductList.addAll(productList);
-        }
+        allProductList.addAll(styleNandaCrawlingService.crawlAllProducts());
+        allProductList.addAll(vivastudioCrawlingService.crawlAllProducts());
         commonCrawlingService.updateAll(allProductList);
     }
 
+    /**
+     * 카드덱 전체 상품 조회 (100개)
+     * @return List<Item>
+     */
     @GetMapping
     public List<Item> getItemsForCardDeck(){
         return commonCrawlingService.get100Items();
+    }
+
+    /**
+     * 카드덱 전체 상품(id-imageUrl) 조회 (100개)
+     * @return List<ItemIdImageUrlMap>
+     */
+    @GetMapping("/image")
+    public List<ItemIdImageUrlMap> getItemsIdImageUrlForCardDeck(){
+        return commonCrawlingService.get100ItemsIdImageUrlMap();
     }
 }

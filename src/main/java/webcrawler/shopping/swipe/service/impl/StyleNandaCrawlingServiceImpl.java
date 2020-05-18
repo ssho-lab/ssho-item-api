@@ -2,20 +2,28 @@ package webcrawler.shopping.swipe.service.impl;
 
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
-import webcrawler.shopping.swipe.Item;
+import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.service.CrawlingService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class StyleNandaCrawlingServiceImpl implements CrawlingService {
 
-    private static String url = "https://www.stylenanda.com/product/list.html?cate_no=1902&page=";
+    private static String url = "https://www.stylenanda.com/product/list.html?";
     private static String host = "https://www.stylenanda.com/";
+    private static HashMap<String,String> categoryMap = new HashMap<String, String>(){{
+        put("아우터", "51");
+        put("탑", "50");
+        put("드레스", "54");
+        put("스커트", "52");
+        put("팬츠", "53");
+        put("가방", "56");
+        put("슈즈", "77");
+        put("악세사리", "55");
+    }};
 
     private final CommonCrawlingServiceImpl commonCrawlingService;
 
@@ -23,8 +31,35 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
         this.commonCrawlingService = commonCrawlingService;
     }
 
+    /**
+     * @return
+     * @throws IOException
+     */
+    public List<Item> crawlAllProducts() throws IOException {
+
+        List<Item> allProductList = new ArrayList<>();
+
+        for (Map.Entry<String, String> c : categoryMap.entrySet()) {
+            for (int pageNo = 0;; pageNo++) {
+                List<Item> productList = crawlAllProductsInCategory(pageNo, c);
+                if (productList.size() == 0) break;
+                allProductList.addAll(productList);
+            }
+        }
+        return allProductList;
+    }
+
+    /**
+     * 카테고리, 페이지 내의 상품 크롤링
+     * @param pageNo
+     * @param category
+     * @return
+     * @throws IOException
+     */
     @Override
-    public List<Item> crawlAllProductsInSinglePage(final int pageNo) throws IOException {
+    public List<Item> crawlAllProductsInCategory(final int pageNo, final Map.Entry<String, String> category) throws IOException {
+
+        String fullUrl = url + "cate_no=" + category.getValue() + "&page=" + pageNo;
 
         // 크롤링시 사용할 Selector 객체 생성
         Selector selector = Selector.builder()
@@ -42,7 +77,7 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
         List<Item> itemList = new ArrayList<>();
 
         // 최상위 Elements 추출
-        Elements elements = commonCrawlingService.getTopElements(pageNo, url, selector.getCommonSelector());
+        Elements elements = commonCrawlingService.getTopElements(pageNo, fullUrl, selector.getCommonSelector());
 
         if(elements.size() == 0) return itemList;
 
@@ -67,6 +102,8 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
             item.setId(item.getMallNo() + item.getLink().split("\\?")[1].split("&")[0].split("=")[1]);
 
             item.setMallNm("스타일난다");
+
+            item.setCategory(category.getKey());
 
             // extra 필드 추가
             item.setProductExtra(commonCrawlingService.setExtraFields(item.getLink(), item, selector, host, 0));

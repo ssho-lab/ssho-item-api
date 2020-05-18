@@ -4,20 +4,29 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
-import webcrawler.shopping.swipe.Item;
+import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class VivastudioCrawlingServiceImpl {
 
-    private static String url = "http://vivastudio.co.kr/product/list.html?cate_no=27&page=";
+    private static String url = "http://vivastudio.co.kr/product/list.html?";
     private static String host = "http://vivastudio.co.kr/";
+
+    private static HashMap<String,String> categoryMap = new HashMap<String,String>(){{
+        put("아우터", "34");
+        put("가죽", "73");
+        put("스웨트셔츠", "114");
+        put("티셔츠", "116");
+        put("셔츠", "117");
+        put("니트", "115");
+        put("하의", "36");
+        put("악세사리", "37");
+    }};
 
     private final CommonCrawlingServiceImpl commonCrawlingService;
 
@@ -25,7 +34,26 @@ public class VivastudioCrawlingServiceImpl {
         this.commonCrawlingService = commonCrawlingService;
     }
 
-    public List<Item> crawlAllProductsInSinglePage(final int pageNo) throws IOException {
+    /**
+     * @return
+     * @throws IOException
+     */
+    public List<Item> crawlAllProducts() throws IOException {
+
+        List<Item> allProductList = new ArrayList<>();
+
+        for (Map.Entry<String, String> c : categoryMap.entrySet()) {
+            for (int pageNo = 0; ; pageNo++) {
+                List<Item> productList = crawlAllProductsInCategory(pageNo, c);
+                if (productList.size() == 0) break;
+                allProductList.addAll(productList);
+            }
+        }
+        return allProductList;
+    }
+
+    public List<Item> crawlAllProductsInCategory(final int pageNo, final Map.Entry<String, String> category) throws IOException {
+        String fullUrl = url + "cate_no=" + category.getValue() + "&page=" + pageNo;
 
         // 크롤링시 사용할 Selector 객체 생성
         Selector selector = Selector.builder()
@@ -43,7 +71,7 @@ public class VivastudioCrawlingServiceImpl {
         List<Item> itemList = new ArrayList<>();
 
         // 최상위 Elements 추출
-        Elements elements = commonCrawlingService.getTopElements(pageNo, url, selector.getCommonSelector());
+        Elements elements = commonCrawlingService.getTopElements(pageNo, fullUrl, selector.getCommonSelector());
 
         if(elements.size() == 0) return itemList;
 
@@ -64,6 +92,8 @@ public class VivastudioCrawlingServiceImpl {
             item.setId(item.getMallNo() + item.getLink().split("\\?")[1].split("&")[0].split("=")[1]);
 
             item.setMallNm("비바스튜디오");
+
+            item.setCategory(category.getKey());
 
             // extra 필드 추가
             item.setProductExtra(commonCrawlingService.setExtraFields(item.getLink(), item, selector, host, 1));

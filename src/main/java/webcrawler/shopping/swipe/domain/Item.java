@@ -1,4 +1,4 @@
-package webcrawler.shopping.swipe;
+package webcrawler.shopping.swipe.domain;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +8,7 @@ import webcrawler.shopping.swipe.model.ProductExtra;
 @Builder
 public class Item {
     private String id;
+    private String category;
     private String mallNo;
     private String mallNm;
     private String title;

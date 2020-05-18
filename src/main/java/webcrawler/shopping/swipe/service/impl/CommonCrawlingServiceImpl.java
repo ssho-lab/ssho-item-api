@@ -6,7 +6,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
-import webcrawler.shopping.swipe.Item;
+import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.repository.ItemRepository;
@@ -140,12 +141,26 @@ public class CommonCrawlingServiceImpl implements CommonCrawlingService {
     public void updateAll(final List<Item> itemList){
         itemRepository.deleteAll();
         itemRepository.saveAll(itemList);
-
     }
 
+    @Override
     public List<Item> get100Items(){
         List<Item> itemList = itemRepository.findAll();
         Collections.shuffle(itemList);
         return itemList.subList(0,100);
+    }
+
+    @Override
+    public List<ItemIdImageUrlMap> get100ItemsIdImageUrlMap(){
+        List<Item> itemList = itemRepository.findAll();
+        Collections.shuffle(itemList);
+        List<ItemIdImageUrlMap> itemIdImageUrlMapList = new ArrayList<>();
+
+        itemList.forEach(i ->itemIdImageUrlMapList.add(ItemIdImageUrlMap.builder()
+                .id(i.getId())
+                .imageUrl(i.getImageUrl())
+                .build()));
+
+        return itemIdImageUrlMapList;
     }
 }
