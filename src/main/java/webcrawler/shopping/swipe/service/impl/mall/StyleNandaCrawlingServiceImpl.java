@@ -1,10 +1,12 @@
-package webcrawler.shopping.swipe.service.impl;
+package webcrawler.shopping.swipe.service.impl.mall;
 
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
+
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.service.CrawlingService;
+import webcrawler.shopping.swipe.service.impl.CommonCrawlingServiceImpl;
 
 import java.io.IOException;
 import java.util.*;
@@ -32,16 +34,18 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
     }
 
     /**
-     * @return
+     * 모든 카테고리 상품 크롤링
+     * @return List<Item>
      * @throws IOException
      */
-    public List<Item> crawlAllProducts() throws IOException {
+    @Override
+    public List<Item> crawlAllProductsInAllCategory() throws IOException {
 
         List<Item> allProductList = new ArrayList<>();
 
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
             for (int pageNo = 0;; pageNo++) {
-                List<Item> productList = crawlAllProductsInCategory(pageNo, c);
+                List<Item> productList = crawlAllProductsInOneCategory(pageNo, c);
                 if (productList.size() == 0) break;
                 allProductList.addAll(productList);
             }
@@ -53,18 +57,17 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
      * 카테고리, 페이지 내의 상품 크롤링
      * @param pageNo
      * @param category
-     * @return
+     * @return List<Item>
      * @throws IOException
      */
     @Override
-    public List<Item> crawlAllProductsInCategory(final int pageNo, final Map.Entry<String, String> category) throws IOException {
+    public List<Item> crawlAllProductsInOneCategory(final int pageNo, final Map.Entry<String, String> category) throws IOException {
 
         String fullUrl = url + "cate_no=" + category.getValue() + "&page=" + pageNo;
 
         // 크롤링시 사용할 Selector 객체 생성
         Selector selector = Selector.builder()
-                .commonSelector(new ArrayList<>(Arrays.asList(".column4 li")))
-                //.extraSelector(new ArrayList<>(Arrays.asList(".d_proimage img")))
+                .topNode(new ArrayList<>(Arrays.asList(".column4 li")))
                 .title(new ArrayList<>(Arrays.asList(".name span")))
                 .price(new ArrayList<>(Arrays.asList(".price", "p")))
                 .imageUrl(new ArrayList<>(Arrays.asList(".box", "a", "img")))
@@ -77,7 +80,7 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
         List<Item> itemList = new ArrayList<>();
 
         // 최상위 Elements 추출
-        Elements elements = commonCrawlingService.getTopElements(pageNo, fullUrl, selector.getCommonSelector());
+        Elements elements = commonCrawlingService.getTopNodeElements(pageNo, fullUrl, selector.getTopNode());
 
         if(elements.size() == 0) return itemList;
 
@@ -106,7 +109,7 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
             item.setCategory(category.getKey());
 
             // extra 필드 추가
-            item.setProductExtra(commonCrawlingService.setExtraFields(item.getLink(), item, selector, host, 0));
+            item.setProductExtra(commonCrawlingService.setExtraFields(selector, item.getLink(), host));
         }
 
         return itemList;

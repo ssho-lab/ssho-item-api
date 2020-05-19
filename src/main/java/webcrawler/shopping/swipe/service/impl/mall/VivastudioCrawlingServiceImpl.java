@@ -1,18 +1,19 @@
-package webcrawler.shopping.swipe.service.impl;
+package webcrawler.shopping.swipe.service.impl.mall;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+
 import org.springframework.stereotype.Service;
+
 import webcrawler.shopping.swipe.domain.Item;
-import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
+import webcrawler.shopping.swipe.service.CrawlingService;
+import webcrawler.shopping.swipe.service.impl.CommonCrawlingServiceImpl;
 
 import java.io.IOException;
 import java.util.*;
 
 @Service
-public class VivastudioCrawlingServiceImpl {
+public class VivastudioCrawlingServiceImpl implements CrawlingService {
 
     private static String url = "http://vivastudio.co.kr/product/list.html?";
     private static String host = "http://vivastudio.co.kr/";
@@ -35,16 +36,17 @@ public class VivastudioCrawlingServiceImpl {
     }
 
     /**
-     * @return
+     * @return List<Item>
      * @throws IOException
      */
-    public List<Item> crawlAllProducts() throws IOException {
+    @Override
+    public List<Item> crawlAllProductsInAllCategory() throws IOException {
 
         List<Item> allProductList = new ArrayList<>();
 
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
-            for (int pageNo = 0; ; pageNo++) {
-                List<Item> productList = crawlAllProductsInCategory(pageNo, c);
+            for (int pageNo = 0;;pageNo++) {
+                List<Item> productList = crawlAllProductsInOneCategory(pageNo, c);
                 if (productList.size() == 0) break;
                 allProductList.addAll(productList);
             }
@@ -52,26 +54,33 @@ public class VivastudioCrawlingServiceImpl {
         return allProductList;
     }
 
-    public List<Item> crawlAllProductsInCategory(final int pageNo, final Map.Entry<String, String> category) throws IOException {
+    /**
+     *
+     * @param pageNo
+     * @param category
+     * @return List<Item>
+     * @throws IOException
+     */
+    @Override
+    public List<Item> crawlAllProductsInOneCategory(final int pageNo, final Map.Entry<String, String> category) throws IOException {
         String fullUrl = url + "cate_no=" + category.getValue() + "&page=" + pageNo;
 
         // 크롤링시 사용할 Selector 객체 생성
         Selector selector = Selector.builder()
-                .commonSelector(new ArrayList<>(Arrays.asList("#grid2-2-4 > li")))
-                //.extraSelector(new ArrayList<>(Arrays.asList(".d_proimage img")))
+                .topNode(new ArrayList<>(Arrays.asList("#grid2-2-4 > li")))
                 .title(new ArrayList<>(Arrays.asList(".over_info p", ".name span")))
-                .price(new ArrayList<>(Arrays.asList(".over_info ul", "span")))
+                .price(new ArrayList<>(Arrays.asList(".over_info ul", "li:eq(2)")))
                 .imageUrl(new ArrayList<>(Arrays.asList(".over_bg div", "a", "img")))
                 .link(new ArrayList<>(Arrays.asList(".box a")))
                 .extraImageUrl(new ArrayList<>(Arrays.asList("#contents div", ".ThumbImage")))
-                .description(new ArrayList<>(Arrays.asList(".desc div")))
+                .description(new ArrayList<>(Arrays.asList(".desc div:eq(1)")))
                 .size(new ArrayList<>(Arrays.asList("#cartArea", "span")))
                 .build();
 
         List<Item> itemList = new ArrayList<>();
 
         // 최상위 Elements 추출
-        Elements elements = commonCrawlingService.getTopElements(pageNo, fullUrl, selector.getCommonSelector());
+        Elements elements = commonCrawlingService.getTopNodeElements(pageNo, fullUrl, selector.getTopNode());
 
         if(elements.size() == 0) return itemList;
 
@@ -96,39 +105,9 @@ public class VivastudioCrawlingServiceImpl {
             item.setCategory(category.getKey());
 
             // extra 필드 추가
-            item.setProductExtra(commonCrawlingService.setExtraFields(item.getLink(), item, selector, host, 1));
+            item.setProductExtra(commonCrawlingService.setExtraFields(selector, item.getLink(), host));
         }
 
         return itemList;
-    }
-
-    public ProductExtra crawlExtra(final String url) throws IOException {
-
-        Document doc = Jsoup.connect(url).get();
-        Elements elements = doc.select("#contents div").select(".ThumbImage");
-        List<String> extraImageUrlList = new ArrayList<>();
-
-        for(int i = 0; i < elements.size(); i++){
-            String imageUrl = elements.get(i).attr("src").substring(2);
-            extraImageUrlList.add(imageUrl);
-        }
-
-        String description = doc.select(".desc div").get(1).text();
-
-        Elements sizeElements = doc.select("#cartArea").select("span");
-        List<String> sizeList = new ArrayList<>();
-
-        for(int i = 0; i < sizeElements.size(); i++){
-            String size = sizeElements.get(i).text();
-            if(size.equals("")) continue;
-            sizeList.add(size);
-        }
-
-        ProductExtra productExtra =
-                ProductExtra.builder().extraImageUrlList(extraImageUrlList)
-                        .description(description)
-                        .sizeList(sizeList).build();
-
-        return productExtra;
     }
 }

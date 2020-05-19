@@ -1,7 +1,6 @@
 package webcrawler.shopping.swipe.api;
 
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,29 +8,28 @@ import org.springframework.web.bind.annotation.RestController;
 
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
+import webcrawler.shopping.swipe.service.impl.CollectorServiceImpl;
 import webcrawler.shopping.swipe.service.impl.CommonCrawlingServiceImpl;
-import webcrawler.shopping.swipe.service.impl.StyleNandaCrawlingServiceImpl;
-import webcrawler.shopping.swipe.service.impl.VivastudioCrawlingServiceImpl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * 크롤링 컨트롤러
+ */
 @Slf4j
 @RestController
 @RequestMapping("/item")
 public class CrawlingController {
 
-    private final StyleNandaCrawlingServiceImpl styleNandaCrawlingService;
-    private final VivastudioCrawlingServiceImpl vivastudioCrawlingService;
     private final CommonCrawlingServiceImpl commonCrawlingService;
+    private final CollectorServiceImpl collectorService;
 
-    public CrawlingController(final StyleNandaCrawlingServiceImpl styleNandaCrawlingService,
-                              final VivastudioCrawlingServiceImpl vivastudioCrawlingService,
-                              final CommonCrawlingServiceImpl commonCrawlingService){
-        this.styleNandaCrawlingService = styleNandaCrawlingService;
-        this.vivastudioCrawlingService = vivastudioCrawlingService;
+    public CrawlingController(CommonCrawlingServiceImpl commonCrawlingService,
+                              CollectorServiceImpl collectorService){
         this.commonCrawlingService = commonCrawlingService;
+        this.collectorService = collectorService;
     }
 
     /**
@@ -40,11 +38,8 @@ public class CrawlingController {
      * @throws IOException
      */
     @Scheduled(cron = "0 */1 * * * *")
-    public void updateItems() throws IOException {
-        List<Item> allProductList = new ArrayList<>();
-        allProductList.addAll(styleNandaCrawlingService.crawlAllProducts());
-        allProductList.addAll(vivastudioCrawlingService.crawlAllProducts());
-        commonCrawlingService.updateAll(allProductList);
+    public List<Item> updateItems() throws IOException {
+        return collectorService.collectAndUpdateAllItems();
     }
 
     /**
