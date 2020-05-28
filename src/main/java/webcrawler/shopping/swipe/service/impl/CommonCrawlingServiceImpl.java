@@ -9,11 +9,13 @@ import org.jsoup.select.Elements;
 
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.reactive.function.client.WebClient;
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.repository.ItemRepository;
+import webcrawler.shopping.swipe.repository.UserItemRepository;
 import webcrawler.shopping.swipe.service.CommonCrawlingService;
 
 import java.io.IOException;
@@ -29,9 +31,15 @@ import java.util.List;
 public class CommonCrawlingServiceImpl implements CommonCrawlingService {
 
     private final ItemRepository itemRepository;
+    private final UserItemRepository userItemRepository;
+    private final WebClient webClient;
 
-    public CommonCrawlingServiceImpl(final ItemRepository itemRepository){
+    public CommonCrawlingServiceImpl(final ItemRepository itemRepository,
+                                     final UserItemRepository userItemRepository,
+                                     final WebClient.Builder webClientBuilder){
         this.itemRepository = itemRepository;
+        this.userItemRepository = userItemRepository;
+        this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
     }
 
     /**
@@ -202,6 +210,27 @@ public class CommonCrawlingServiceImpl implements CommonCrawlingService {
     }
 
     /**
+     * 20개 상품 랜덤 추출 (이미 본 상품 제외)
+     * @return List<Item>
+     */
+    public List<Item> get20ItemsNotRevealed(final String userId){
+        List<Item> itemList = itemRepository.findAll();
+        List<Item> filteredItemList = new ArrayList<>();
+
+        final List<String> userItemList =
+                webClient
+                .get().uri("/log/swipe/user?userId={userId}", userId)
+                .retrieve().bodyToMono(ArrayList.class).block();
+
+        itemList.stream().filter(item -> !userItemList.contains(item.getId()))
+                .forEach(f -> filteredItemList.add(f));
+
+        Collections.shuffle(filteredItemList);
+
+        return filteredItemList.subList(0,20);
+    }
+
+    /**
      * 상품 고유 번호 - 상품 이미지 포함 100개 상품 랜덤 추출
      * @return List<ItemIdImageUrlMap>
      */
@@ -217,5 +246,24 @@ public class CommonCrawlingServiceImpl implements CommonCrawlingService {
                 .build()));
 
         return itemIdImageUrlMapList;
+    }
+
+    /**
+     * 20개 상품 랜덤 추출 (이미 본 상품 제외)
+     * @return List<Item>
+     */
+    public List<Item> getLikeItemsByUserId(final String userId){
+        List<Item> itemList = itemRepository.findAll();
+        List<Item> likeItemList = new ArrayList<>();
+
+        final List<String> userItemList =
+                webClient
+                        .get().uri("/log/swipe/user/like?userId={userId}", userId)
+                        .retrieve().bodyToMono(ArrayList.class).block();
+
+        itemList.stream().filter(item -> userItemList.contains(item.getId()))
+                .forEach(f -> likeItemList.add(f));
+
+        return likeItemList;
     }
 }
