@@ -17,5 +17,4 @@ public class SwipeApplication {
     public static void main(String[] args) {
         SpringApplication.run(SwipeApplication.class, args);
     }
-
 }

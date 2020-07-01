@@ -1,7 +1,6 @@
 package webcrawler.shopping.swipe.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import webcrawler.shopping.swipe.domain.User;
 import webcrawler.shopping.swipe.domain.UserItem;
 
 import java.util.List;

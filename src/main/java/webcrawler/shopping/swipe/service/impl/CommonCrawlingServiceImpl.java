@@ -253,9 +253,12 @@ public class CommonCrawlingServiceImpl implements CommonCrawlingService {
      * @return List<Item>
      */
     public List<Item> getLikeItemsByUserId(final String userId){
+
         List<Item> itemList = itemRepository.findAll();
         List<Item> likeItemList = new ArrayList<>();
 
+
+        // 서버(요청) -> 서버(응답)
         final List<String> userItemList =
                 webClient
                         .get().uri("/log/swipe/user/like?userId={userId}", userId)
