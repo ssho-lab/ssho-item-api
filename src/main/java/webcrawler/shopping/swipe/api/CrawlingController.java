@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
+import webcrawler.shopping.swipe.repository.ItemRepository;
 import webcrawler.shopping.swipe.repository.UserRepository;
 import webcrawler.shopping.swipe.service.impl.CollectorServiceImpl;
 import webcrawler.shopping.swipe.service.impl.CommonCrawlingServiceImpl;
@@ -27,13 +28,16 @@ public class CrawlingController {
     private final CommonCrawlingServiceImpl commonCrawlingService;
     private final CollectorServiceImpl collectorService;
     private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
 
     public CrawlingController(CommonCrawlingServiceImpl commonCrawlingService,
                               CollectorServiceImpl collectorService,
-                              UserRepository userRepository){
+                              UserRepository userRepository,
+                              ItemRepository itemRepository){
         this.commonCrawlingService = commonCrawlingService;
         this.collectorService = collectorService;
         this.userRepository = userRepository;
+        this.itemRepository = itemRepository;
     }
 
     /**
@@ -42,7 +46,7 @@ public class CrawlingController {
      * @throws IOException
      */
     // @Scheduled(cron = "0 */1 * * * *")
-    @GetMapping("crawl")
+    @GetMapping("/crawl")
     public List<Item> updateItems() throws IOException {
         return collectorService.collectAndUpdateAllItems();
     }
