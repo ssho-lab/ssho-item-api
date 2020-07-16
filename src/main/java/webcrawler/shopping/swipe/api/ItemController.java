@@ -42,7 +42,7 @@ public class ItemController {
      * 1시간에 한 번으로 스케쥴링
      * @throws IOException
      */
-    @Scheduled(cron = "0 */1 * * * *")
+    @Scheduled(cron = "*/30 * * * * *")
     public List<Item> updateItems() throws IOException {
         return collectorService.collectAndUpdateAllItems();
     }
