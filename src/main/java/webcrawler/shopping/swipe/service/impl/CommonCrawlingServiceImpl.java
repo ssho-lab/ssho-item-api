@@ -204,8 +204,11 @@ public class CommonCrawlingServiceImpl implements CommonCrawlingService {
      */
     @Override
     public List<Item> get100Items(){
+
         List<Item> itemList = itemRepository.findAll();
+
         Collections.shuffle(itemList);
+
         return itemList.subList(0,100);
     }
 
