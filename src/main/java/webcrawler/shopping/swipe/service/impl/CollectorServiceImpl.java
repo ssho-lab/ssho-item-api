@@ -20,10 +20,10 @@ public class CollectorServiceImpl implements CollectorService {
     // CrawlingService 타입을 가지는 모든 Bean 주입
     private final List<CrawlingService> crawlingServiceList;
 
-    private final CommonCrawlingServiceImpl commonCrawlingService;
+    private final ItemServiceImpl commonCrawlingService;
 
     public CollectorServiceImpl(final List<CrawlingService> crawlingServiceList,
-                                final CommonCrawlingServiceImpl commonCrawlingService){
+                                final ItemServiceImpl commonCrawlingService){
         this.crawlingServiceList = crawlingServiceList;
         this.commonCrawlingService = commonCrawlingService;
     }

@@ -1,6 +1,7 @@
 package webcrawler.shopping.swipe.service;
 
 import org.jsoup.select.Elements;
+import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
@@ -12,7 +13,7 @@ import java.util.List;
 /**
  * 크롤링 공통 작업을 위한 Interface
  */
-public interface CommonCrawlingService {
+public interface ItemService {
 
     Elements getTopNodeElements(final int pageNo, final String url, final List<String> selectors) throws IOException;
 
@@ -21,6 +22,8 @@ public interface CommonCrawlingService {
     ProductExtra setExtraFields(final Selector selector, final String url, final String host) throws IOException;
 
     void updateAll(final List<Item> itemList);
+
+    void requestCrawlingApiAccessLogSave(final CrawlingApiAccessLog crawlingApiAccessLog);
 
     List<Item> get100Items();
 

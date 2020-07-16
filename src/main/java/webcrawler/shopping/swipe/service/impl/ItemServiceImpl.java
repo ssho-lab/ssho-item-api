@@ -10,13 +10,14 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import org.springframework.web.reactive.function.client.WebClient;
+import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.repository.ItemRepository;
 import webcrawler.shopping.swipe.repository.UserItemRepository;
-import webcrawler.shopping.swipe.service.CommonCrawlingService;
+import webcrawler.shopping.swipe.service.ItemService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,15 +29,15 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class CommonCrawlingServiceImpl implements CommonCrawlingService {
+public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final UserItemRepository userItemRepository;
     private final WebClient webClient;
 
-    public CommonCrawlingServiceImpl(final ItemRepository itemRepository,
-                                     final UserItemRepository userItemRepository,
-                                     final WebClient.Builder webClientBuilder){
+    public ItemServiceImpl(final ItemRepository itemRepository,
+                           final UserItemRepository userItemRepository,
+                           final WebClient.Builder webClientBuilder){
         this.itemRepository = itemRepository;
         this.userItemRepository = userItemRepository;
         this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
@@ -196,6 +197,16 @@ public class CommonCrawlingServiceImpl implements CommonCrawlingService {
     public void updateAll(final List<Item> itemList){
         itemRepository.deleteAll();
         itemRepository.saveAll(itemList);
+    }
+
+    @Override
+    public void requestCrawlingApiAccessLogSave(final CrawlingApiAccessLog crawlingApiAccessLog){
+        webClient
+                .post().uri("/log/crawling-api")
+                .bodyValue(crawlingApiAccessLog)
+                .retrieve()
+                .bodyToMono(CrawlingApiAccessLog.class)
+                .block();
     }
 
     /**

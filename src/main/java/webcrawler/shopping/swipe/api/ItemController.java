@@ -7,14 +7,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
 import webcrawler.shopping.swipe.domain.Item;
-import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
-import webcrawler.shopping.swipe.repository.ItemRepository;
-import webcrawler.shopping.swipe.repository.UserRepository;
 import webcrawler.shopping.swipe.service.impl.CollectorServiceImpl;
-import webcrawler.shopping.swipe.service.impl.CommonCrawlingServiceImpl;
+import webcrawler.shopping.swipe.service.impl.ItemServiceImpl;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -26,25 +26,42 @@ import java.util.List;
 @RequestMapping("/item")
 public class ItemController {
 
-    private final CommonCrawlingServiceImpl commonCrawlingService;
+    private final ItemServiceImpl itemService;
     private final CollectorServiceImpl collectorService;
 
-    public ItemController(CommonCrawlingServiceImpl commonCrawlingService,
-                          CollectorServiceImpl collectorService,
-                          UserRepository userRepository,
-                          ItemRepository itemRepository){
-        this.commonCrawlingService = commonCrawlingService;
+    public ItemController(ItemServiceImpl itemService,
+                          CollectorServiceImpl collectorService){
+        this.itemService = itemService;
         this.collectorService = collectorService;
     }
 
     /**
      * 전체 쇼핑몰 데이터 크롤링 + DB 업데이트
-     * 1시간에 한 번으로 스케쥴링
+     * 30분에 한 번으로 스케쥴링
      * @throws IOException
      */
     @Scheduled(cron = "*/30 * * * * *")
     public List<Item> updateItems() throws IOException {
-        return collectorService.collectAndUpdateAllItems();
+
+        CrawlingApiAccessLog crawlingApiAccessLog =
+                CrawlingApiAccessLog.builder()
+                        .path("/item")
+                        .accessTime(LocalDateTime.now())
+                        .build();
+
+        try {
+
+            List<Item> itemList = collectorService.collectAndUpdateAllItems();
+            crawlingApiAccessLog.setStatusCode(201);
+            itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog);
+            return itemList;
+        }
+        catch (Exception e){
+
+            crawlingApiAccessLog.setStatusCode(400);
+            itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog);
+            return new ArrayList<>();
+        }
     }
 
     /**
@@ -53,7 +70,7 @@ public class ItemController {
      */
     @GetMapping
     public List<Item> getItemsForCardDeck(){
-        return commonCrawlingService.get100Items();
+        return itemService.get100Items();
     }
 
     /**
@@ -62,16 +79,7 @@ public class ItemController {
      */
     @GetMapping("/test")
     public List<Item> getItemsTestWeb(@RequestParam("userId") final String userId){
-        return commonCrawlingService.get20ItemsNotRevealed(userId);
-    }
-
-    /**
-     * 카드덱 전체 상품(id-imageUrl) 조회 (100개)
-     * @return List<ItemIdImageUrlMap>
-     */
-    @GetMapping("/image")
-    public List<ItemIdImageUrlMap> getItemsIdImageUrlForCardDeck(){
-        return commonCrawlingService.get100ItemsIdImageUrlMap();
+        return itemService.get20ItemsNotRevealed(userId);
     }
 
     /**
@@ -80,6 +88,6 @@ public class ItemController {
      */
     @GetMapping("/test/like")
     public List<Item> getLikeItemsByUserId(@RequestParam("userId") final String userId){
-        return commonCrawlingService.getLikeItemsByUserId(userId);
+        return itemService.getLikeItemsByUserId(userId);
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.service.CrawlingService;
-import webcrawler.shopping.swipe.service.impl.CommonCrawlingServiceImpl;
+import webcrawler.shopping.swipe.service.impl.ItemServiceImpl;
 
 import java.io.IOException;
 import java.util.*;
@@ -29,9 +29,9 @@ public class VivastudioCrawlingServiceImpl implements CrawlingService {
         put("악세사리", "37");
     }};
 
-    private final CommonCrawlingServiceImpl commonCrawlingService;
+    private final ItemServiceImpl commonCrawlingService;
 
-    public VivastudioCrawlingServiceImpl(final CommonCrawlingServiceImpl commonCrawlingService){
+    public VivastudioCrawlingServiceImpl(final ItemServiceImpl commonCrawlingService){
         this.commonCrawlingService = commonCrawlingService;
     }
 

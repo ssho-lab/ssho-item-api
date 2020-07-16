@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.service.CrawlingService;
-import webcrawler.shopping.swipe.service.impl.CommonCrawlingServiceImpl;
+import webcrawler.shopping.swipe.service.impl.ItemServiceImpl;
 
 import java.io.IOException;
 import java.util.*;
@@ -27,9 +27,9 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
         put("악세사리", "55");
     }};
 
-    private final CommonCrawlingServiceImpl commonCrawlingService;
+    private final ItemServiceImpl commonCrawlingService;
 
-    public StyleNandaCrawlingServiceImpl(final CommonCrawlingServiceImpl commonCrawlingService){
+    public StyleNandaCrawlingServiceImpl(final ItemServiceImpl commonCrawlingService){
         this.commonCrawlingService = commonCrawlingService;
     }
 
