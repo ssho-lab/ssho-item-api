@@ -24,21 +24,17 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/item")
-public class CrawlingController {
+public class ItemController {
 
     private final CommonCrawlingServiceImpl commonCrawlingService;
     private final CollectorServiceImpl collectorService;
-    private final UserRepository userRepository;
-    private final ItemRepository itemRepository;
 
-    public CrawlingController(CommonCrawlingServiceImpl commonCrawlingService,
-                              CollectorServiceImpl collectorService,
-                              UserRepository userRepository,
-                              ItemRepository itemRepository){
+    public ItemController(CommonCrawlingServiceImpl commonCrawlingService,
+                          CollectorServiceImpl collectorService,
+                          UserRepository userRepository,
+                          ItemRepository itemRepository){
         this.commonCrawlingService = commonCrawlingService;
         this.collectorService = collectorService;
-        this.userRepository = userRepository;
-        this.itemRepository = itemRepository;
     }
 
     /**
@@ -47,7 +43,6 @@ public class CrawlingController {
      * @throws IOException
      */
     @Scheduled(cron = "0 */1 * * * *")
-    @GetMapping("/crawl")
     public List<Item> updateItems() throws IOException {
         return collectorService.collectAndUpdateAllItems();
     }

@@ -63,13 +63,14 @@ public class VivastudioCrawlingServiceImpl implements CrawlingService {
      */
     @Override
     public List<Item> crawlAllProductsInOneCategory(final int pageNo, final Map.Entry<String, String> category) throws IOException {
+
         String fullUrl = url + "cate_no=" + category.getValue() + "&page=" + pageNo;
 
         // 크롤링시 사용할 Selector 객체 생성
         Selector selector = Selector.builder()
                 .topNode(new ArrayList<>(Arrays.asList("#grid2-2-4 > li")))
                 .title(new ArrayList<>(Arrays.asList(".over_info p", ".name span")))
-                .price(new ArrayList<>(Arrays.asList(".over_info ul", "li:eq(2)")))
+                .price(new ArrayList<>(Arrays.asList(".over_info ul", "li:eq(1)")))
                 .imageUrl(new ArrayList<>(Arrays.asList(".over_bg div", "a", "img")))
                 .link(new ArrayList<>(Arrays.asList(".box a")))
                 .extraImageUrl(new ArrayList<>(Arrays.asList("#contents div", ".ThumbImage")))
