@@ -70,7 +70,7 @@ public class VivastudioCrawlingServiceImpl implements CrawlingService {
         Selector selector = Selector.builder()
                 .topNode(new ArrayList<>(Arrays.asList("#grid2-2-4 > li")))
                 .title(new ArrayList<>(Arrays.asList(".over_info p", ".name span")))
-                .price(new ArrayList<>(Arrays.asList(".over_info ul", "li:eq(1)")))
+                .price(new ArrayList<>(Arrays.asList(".over_info ul", "span:contains(won)")))
                 .imageUrl(new ArrayList<>(Arrays.asList(".over_bg div", "a", "img")))
                 .link(new ArrayList<>(Arrays.asList(".box a")))
                 .extraImageUrl(new ArrayList<>(Arrays.asList("#contents div", ".ThumbImage")))
@@ -90,6 +90,15 @@ public class VivastudioCrawlingServiceImpl implements CrawlingService {
 
         // 필드 로컬 작업
         for (Item item : itemList) {
+
+            String[] priceStr = item.getPrice().split(" ");
+
+            if(priceStr.length == 2) {
+                item.setPrice(priceStr[0].replace(",", ""));
+            }
+            else if(priceStr.length == 5){
+                item.setPrice(priceStr[2].replace(",", ""));
+            }
 
             item.setPrice(item.getPrice().split(" ")[0].replace(",", ""));
 

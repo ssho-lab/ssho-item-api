@@ -43,6 +43,7 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
 
         List<Item> allProductList = new ArrayList<>();
 
+        /*
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
             for (int pageNo = 0;; pageNo++) {
                 List<Item> productList = crawlAllProductsInOneCategory(pageNo, c);
@@ -50,6 +51,19 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
                 allProductList.addAll(productList);
             }
         }
+
+         */
+
+
+        for (Map.Entry<String, String> c : categoryMap.entrySet()) {
+            for (int pageNo = 0; pageNo < 1; pageNo++) {
+                List<Item> productList = crawlAllProductsInOneCategory(pageNo, c);
+                if (productList.size() == 0) break;
+                allProductList.addAll(productList);
+            }
+            break;
+        }
+
         return allProductList;
     }
 
@@ -89,12 +103,20 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
 
         // 필드 로컬 작업
         for (Item item : itemList) {
-            item.setTitle(item.getTitle().substring(4));
+            String titleStr = item.getTitle().substring(4);
+            titleStr = titleStr.split("#")[0];
+            titleStr = titleStr.substring(0, titleStr.length() -1);
+            item.setTitle(titleStr);
 
-            item.setPrice(item.getPrice().replace("원 →", ""));
-            item.setPrice((item.getPrice().contains("원") ? item.getPrice().split(" ")[1]
+            String priceStr = item.getPrice().replace("원 →", "");
+
+            priceStr = (priceStr.contains("원") ? priceStr.split(" ")[1]
                     .replace("원", "").replace(",", "")
-                    : item.getPrice().replace(",", "")));
+                    : priceStr.replace(",", ""));
+
+            priceStr = priceStr.replace(" ", "");
+
+            item.setPrice(priceStr);
 
             item.setImageUrl("https://" + item.getImageUrl().substring(2));
 
