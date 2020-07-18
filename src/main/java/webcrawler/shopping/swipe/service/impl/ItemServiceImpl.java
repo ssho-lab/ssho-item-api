@@ -15,6 +15,7 @@ import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
+import webcrawler.shopping.swipe.model.SlackTarget;
 import webcrawler.shopping.swipe.repository.ItemRepository;
 import webcrawler.shopping.swipe.repository.UserItemRepository;
 import webcrawler.shopping.swipe.service.ItemService;
@@ -199,10 +200,24 @@ public class ItemServiceImpl implements ItemService {
         itemRepository.saveAll(itemList);
     }
 
+    /**
+     *
+     * @param crawlingApiAccessLog
+     */
     @Override
     public void requestCrawlingApiAccessLogSave(final CrawlingApiAccessLog crawlingApiAccessLog){
+
+        // crawling api call
         webClient
                 .post().uri("/log/crawling-api")
+                .bodyValue(crawlingApiAccessLog)
+                .retrieve()
+                .bodyToMono(CrawlingApiAccessLog.class)
+                .block();
+
+        // slack webhook call
+        webClient
+                .post().uri(SlackTarget.CH_BOT.getWebHookUrl())
                 .bodyValue(crawlingApiAccessLog)
                 .retrieve()
                 .bodyToMono(CrawlingApiAccessLog.class)

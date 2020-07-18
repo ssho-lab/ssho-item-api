@@ -43,7 +43,7 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
 
         List<Item> allProductList = new ArrayList<>();
 
-        /*
+
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
             for (int pageNo = 0;; pageNo++) {
                 List<Item> productList = crawlAllProductsInOneCategory(pageNo, c);
@@ -51,10 +51,7 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
                 allProductList.addAll(productList);
             }
         }
-
-         */
-
-
+        /*
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
             for (int pageNo = 0; pageNo < 1; pageNo++) {
                 List<Item> productList = crawlAllProductsInOneCategory(pageNo, c);
@@ -63,6 +60,7 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
             }
             break;
         }
+         */
 
         return allProductList;
     }
