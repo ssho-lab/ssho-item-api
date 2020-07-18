@@ -7,6 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,7 +16,7 @@ import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
-import webcrawler.shopping.swipe.model.SlackTarget;
+import webcrawler.shopping.swipe.model.SlackMessage;
 import webcrawler.shopping.swipe.repository.ItemRepository;
 import webcrawler.shopping.swipe.repository.UserItemRepository;
 import webcrawler.shopping.swipe.service.ItemService;
@@ -35,6 +36,9 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserItemRepository userItemRepository;
     private final WebClient webClient;
+
+    @Value("${slack.webhook.url}")
+    private String slackWebhookUrl;
 
     public ItemServiceImpl(final ItemRepository itemRepository,
                            final UserItemRepository userItemRepository,
@@ -216,11 +220,18 @@ public class ItemServiceImpl implements ItemService {
                 .block();
 
         // slack webhook call
+        SlackMessage slackMessage = new SlackMessage();
+
+        String slackText = crawlingApiAccessLog.getStatusCode() == 200 ?
+                "성공" : "실패";
+
+        slackMessage.setText(slackText);
+
         webClient
-                .post().uri(SlackTarget.CH_BOT.getWebHookUrl())
-                .bodyValue(crawlingApiAccessLog)
+                .post().uri(slackWebhookUrl)
+                .bodyValue(slackMessage)
                 .retrieve()
-                .bodyToMono(CrawlingApiAccessLog.class)
+                .bodyToMono(SlackMessage.class)
                 .block();
     }
 

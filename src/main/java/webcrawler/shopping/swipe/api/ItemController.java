@@ -40,7 +40,7 @@ public class ItemController {
      * 2분에 한 번으로 스케쥴링
      * @throws IOException
      */
-    @Scheduled(cron = "* */2 * * * *")
+    @Scheduled(cron = "* */1 * * * *")
     public List<Item> updateItems() throws IOException {
 
         CrawlingApiAccessLog crawlingApiAccessLog =
