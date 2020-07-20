@@ -23,7 +23,7 @@ public interface ItemService {
 
     void updateAll(final List<Item> itemList);
 
-    void requestCrawlingApiAccessLogSave(final CrawlingApiAccessLog crawlingApiAccessLog);
+    void requestCrawlingApiAccessLogSave(final CrawlingApiAccessLog crawlingApiAccessLog, final int itemListSize);
 
     List<Item> get100Items();
 

@@ -40,7 +40,7 @@ public class ItemController {
      * 2분에 한 번으로 스케쥴링
      * @throws IOException
      */
-    @Scheduled(cron = "* */1 * * * *")
+    //@Scheduled(cron = "* * */4 * * *")
     public List<Item> updateItems() throws IOException {
 
         CrawlingApiAccessLog crawlingApiAccessLog =
@@ -53,13 +53,17 @@ public class ItemController {
 
             List<Item> itemList = collectorService.collectAndUpdateAllItems();
             crawlingApiAccessLog.setStatusCode(201);
-            itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog);
+
+            itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog, itemList.size());
+
             return itemList;
         }
         catch (Exception e){
 
             crawlingApiAccessLog.setStatusCode(400);
-            itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog);
+
+            itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog, 0);
+
             return new ArrayList<>();
         }
     }

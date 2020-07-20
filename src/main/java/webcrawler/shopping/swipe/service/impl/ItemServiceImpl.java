@@ -8,8 +8,10 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
 import webcrawler.shopping.swipe.domain.Item;
@@ -209,7 +211,7 @@ public class ItemServiceImpl implements ItemService {
      * @param crawlingApiAccessLog
      */
     @Override
-    public void requestCrawlingApiAccessLogSave(final CrawlingApiAccessLog crawlingApiAccessLog){
+    public void requestCrawlingApiAccessLogSave(final CrawlingApiAccessLog crawlingApiAccessLog, final int itemListSize){
 
         // crawling api call
         webClient
@@ -222,17 +224,15 @@ public class ItemServiceImpl implements ItemService {
         // slack webhook call
         SlackMessage slackMessage = new SlackMessage();
 
-        String slackText = crawlingApiAccessLog.getStatusCode() == 200 ?
-                "성공" : "실패";
+        String slackText = crawlingApiAccessLog.getStatusCode() == 201 ?
+                "성공 | " + "업데이트 된 상품 수 : " + itemListSize : "실패";
 
         slackMessage.setText(slackText);
 
-        webClient
-                .post().uri(slackWebhookUrl)
-                .bodyValue(slackMessage)
-                .retrieve()
-                .bodyToMono(SlackMessage.class)
-                .block();
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        RestTemplate restTemplate = new RestTemplate(factory);
+
+        restTemplate.postForEntity(slackWebhookUrl, slackMessage, String.class);
     }
 
     /**
@@ -289,7 +289,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     /**
-     * 20개 상품 랜덤 추출 (이미 본 상품 제외)
+     * 회원별 좋아요 한 상품 조회
      * @return List<Item>
      */
     public List<Item> getLikeItemsByUserId(final String userId){
