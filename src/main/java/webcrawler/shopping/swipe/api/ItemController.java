@@ -37,11 +37,11 @@ public class ItemController {
 
     /**
      * 전체 쇼핑몰 데이터 크롤링 + DB 업데이트
-     * 2분에 한 번으로 스케쥴링
+     * 4시간에 한 번으로 스케쥴링
      * @throws IOException
      */
-    //@Scheduled(cron = "* * */4 * * *")
-    public List<Item> updateItems() throws IOException {
+    @Scheduled(cron = "0 0 */4 * * *")
+    public List<Item> updateItems(){
 
         CrawlingApiAccessLog crawlingApiAccessLog =
                 CrawlingApiAccessLog.builder()

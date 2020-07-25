@@ -43,6 +43,10 @@ public class CollectorServiceImpl implements CollectorService {
             itemList.addAll(c.crawlAllProductsInAllCategory());
         }
 
+        // TODO: 태깅 API 호출
+        // TODO: realTagId로 expTagId 조회 하는 API 호출
+        // TODO: realTag, expTag set
+
         // DB 업데이트
         commonCrawlingService.updateAll(itemList);
 

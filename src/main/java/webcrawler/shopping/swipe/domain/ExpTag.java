@@ -1,9 +1,6 @@
 package webcrawler.shopping.swipe.domain;
 
-import lombok.Data;
-
-@Data
-public class RealTag {
+public class ExpTag {
     private String id;
     private String name;
 }

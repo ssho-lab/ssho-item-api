@@ -16,8 +16,7 @@ public class SwipeLog {
     private String itemId;
     private int score;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
-    private LocalDateTime swipeTime;
+    private String swipeTime;
 
     private int duration;
 }

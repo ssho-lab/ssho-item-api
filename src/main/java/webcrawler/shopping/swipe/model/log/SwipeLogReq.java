@@ -14,8 +14,7 @@ import java.util.List;
 @Builder
 public class SwipeLogReq {
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Seoul")
-    private LocalDateTime startTime;
+    private String startTime;
 
     private List<SwipeLog> swipeList;
 }
