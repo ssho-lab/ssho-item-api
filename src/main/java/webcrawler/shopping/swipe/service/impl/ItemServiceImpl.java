@@ -19,6 +19,7 @@ import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.model.SlackMessage;
+import webcrawler.shopping.swipe.model.log.SwipeLog;
 import webcrawler.shopping.swipe.repository.ItemRepository;
 import webcrawler.shopping.swipe.repository.UserItemRepository;
 import webcrawler.shopping.swipe.service.ItemService;
@@ -257,12 +258,16 @@ public class ItemServiceImpl implements ItemService {
         List<Item> itemList = itemRepository.findAll();
         List<Item> filteredItemList = new ArrayList<>();
 
-        final List<String> userItemList =
+        final List<String> userItemIdList =
                 webClient
                 .get().uri("/log/swipe/user?userId={userId}", userId)
-                .retrieve().bodyToMono(ArrayList.class).block();
+                .retrieve()
+                        .bodyToFlux(SwipeLog.class)
+                        .map(SwipeLog::getItemId)
+                        .collectList()
+                        .block();
 
-        itemList.stream().filter(item -> !userItemList.contains(item.getId()))
+        itemList.stream().filter(item -> !userItemIdList.contains(item.getId()))
                 .forEach(f -> filteredItemList.add(f));
 
         Collections.shuffle(filteredItemList);
@@ -297,14 +302,16 @@ public class ItemServiceImpl implements ItemService {
         List<Item> itemList = itemRepository.findAll();
         List<Item> likeItemList = new ArrayList<>();
 
-
-        // 서버(요청) -> 서버(응답)
-        final List<String> userItemList =
+        final List<String> userItemIdList =
                 webClient
-                        .get().uri("/log/swipe/user/like?userId={userId}", userId)
-                        .retrieve().bodyToMono(ArrayList.class).block();
+                        .get().uri("/log/swipe/user/liked?userId={userId}", userId)
+                        .retrieve()
+                        .bodyToFlux(SwipeLog.class)
+                        .map(SwipeLog::getItemId)
+                        .collectList()
+                        .block();
 
-        itemList.stream().filter(item -> userItemList.contains(item.getId()))
+        itemList.stream().filter(item -> userItemIdList.contains(item.getId()))
                 .forEach(f -> likeItemList.add(f));
 
         return likeItemList;
