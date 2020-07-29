@@ -8,6 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +27,10 @@ import webcrawler.shopping.swipe.service.ItemService;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 크롤링 공통 작업 Impl
@@ -48,7 +51,8 @@ public class ItemServiceImpl implements ItemService {
                            final WebClient.Builder webClientBuilder){
         this.itemRepository = itemRepository;
         this.userItemRepository = userItemRepository;
-        this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
+        //this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
+        this.webClient = webClientBuilder.baseUrl("http://localhost:8082").build();
     }
 
     /**
@@ -297,6 +301,7 @@ public class ItemServiceImpl implements ItemService {
      * 회원별 좋아요 한 상품 조회
      * @return List<Item>
      */
+    /*
     public List<Item> getLikeItemsByUserId(final String userId){
 
         List<Item> itemList = itemRepository.findAll();
@@ -304,7 +309,7 @@ public class ItemServiceImpl implements ItemService {
 
         final List<String> userItemIdList =
                 webClient
-                        .get().uri("/log/swipe/user/liked?userId={userId}", userId)
+                        .get().uri("/log/swipe/user/like?userId={userId}", userId)
                         .retrieve()
                         .bodyToFlux(SwipeLog.class)
                         .map(SwipeLog::getItemId)
@@ -313,6 +318,36 @@ public class ItemServiceImpl implements ItemService {
 
         itemList.stream().filter(item -> userItemIdList.contains(item.getId()))
                 .forEach(f -> likeItemList.add(f));
+
+        return likeItemList;
+    }
+     */
+
+    /**
+     * 회원별 좋아요 한 상품 조회
+     * @return List<Item>
+     */
+    public List<Item> getLikeItemsByUserId(final String userId){
+
+        List<Item> itemList = itemRepository.findAll();
+        List<Item> likeItemList = new ArrayList<>();
+
+        final List<SwipeLog[]> groupedSwipeLogList =
+                webClient
+                        .get().uri("/log/swipe/user/like/grouped?userId={userId}", userId)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<List<SwipeLog[]>>() {})
+                        .block();
+
+
+        // TODO: List<Item[]> 형태로 return 하도록 로직 구현
+
+        /*
+
+        itemList.stream().filter(item -> userItemIdList.contains(item.getId()))
+                .forEach(f -> likeItemList.add(f));
+
+         */
 
         return likeItemList;
     }

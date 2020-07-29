@@ -1,10 +1,7 @@
 package webcrawler.shopping.swipe.model.log;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 /**
  * SwipeLog 도메인
@@ -12,11 +9,13 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class SwipeLog {
-    private String userId;
-    private String itemId;
-    private int score;
-
-    private String swipeTime;
-
-    private int duration;
+    private String userId;      // 회원 고유 번호
+    private String itemId;      // 상품 고유 번호
+    private int score;          // 스와이프 score
+    private String swipeTime;   // 스와이프 로그 생성 시각
+    private int duration;       // 해당 상품 카드에서 머문 시간(sec)
+    private String expTagId;    // 노출 태그 고유 번호
+    private String expTagName;  // 노출 태그 이름
+    private int cardSetSeq;
+    private int cardSeq;
 }
