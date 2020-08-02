@@ -26,10 +26,7 @@ import webcrawler.shopping.swipe.repository.UserItemRepository;
 import webcrawler.shopping.swipe.service.ItemService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -51,8 +48,8 @@ public class ItemServiceImpl implements ItemService {
                            final WebClient.Builder webClientBuilder){
         this.itemRepository = itemRepository;
         this.userItemRepository = userItemRepository;
-        //this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
-        this.webClient = webClientBuilder.baseUrl("http://localhost:8082").build();
+        this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
+        //this.webClient = webClientBuilder.baseUrl("http://localhost:8082").build();
     }
 
     /**
@@ -327,28 +324,30 @@ public class ItemServiceImpl implements ItemService {
      * 회원별 좋아요 한 상품 조회
      * @return List<Item>
      */
-    public List<Item> getLikeItemsByUserId(final String userId){
+    public List<List<Item>> getLikeItemsByUserId(final String userId){
 
-        List<Item> itemList = itemRepository.findAll();
-        List<Item> likeItemList = new ArrayList<>();
+        List<List<Item>> likedItemsList = new ArrayList<>();
 
-        final List<SwipeLog[]> groupedSwipeLogList =
+        final Map<Integer, List<SwipeLog>> groupedSwipeLogList =
                 webClient
                         .get().uri("/log/swipe/user/like/grouped?userId={userId}", userId)
                         .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<List<SwipeLog[]>>() {})
+                        .bodyToMono(new ParameterizedTypeReference<Map<Integer, List<SwipeLog>>>() {})
                         .block();
 
+        for(Map.Entry<Integer, List<SwipeLog>> entry : groupedSwipeLogList.entrySet()){
 
-        // TODO: List<Item[]> 형태로 return 하도록 로직 구현
+            List<SwipeLog> swipeLogList = entry.getValue();
 
-        /*
+            List<Item> itemList =
+                    swipeLogList
+                        .stream()
+                        .map(swipeLog -> itemRepository.findById(swipeLog.getItemId()).get())
+                        .collect(Collectors.toList());
 
-        itemList.stream().filter(item -> userItemIdList.contains(item.getId()))
-                .forEach(f -> likeItemList.add(f));
+            likedItemsList.add(itemList);
+        }
 
-         */
-
-        return likeItemList;
+        return likedItemsList;
     }
 }

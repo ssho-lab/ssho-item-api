@@ -91,7 +91,7 @@ public class ItemController {
      * @return List<Item>
      */
     @GetMapping("/test/like")
-    public List<Item> getLikeItemsByUserId(@RequestParam("userId") final String userId){
+    public List<List<Item>> getLikeItemsByUserId(@RequestParam("userId") final String userId){
         return itemService.getLikeItemsByUserId(userId);
     }
 }
