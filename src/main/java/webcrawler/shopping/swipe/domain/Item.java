@@ -1,7 +1,9 @@
 package webcrawler.shopping.swipe.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import webcrawler.shopping.swipe.model.ProductExtra;
 
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.List;
  * Item(상품) 도메인
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Item {
     private String id;                  // 상품 고유 번호

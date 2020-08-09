@@ -1,10 +1,10 @@
 package webcrawler.shopping.swipe.repository;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 import webcrawler.shopping.swipe.domain.User;
 
-import java.util.Optional;
-
-public interface UserRepository extends MongoRepository<User, String> {
-    Optional<User> findByName(final String name);
+@Repository
+public interface UserRepository extends JpaRepository<User, String>{
+    User findByName(String name);
 }

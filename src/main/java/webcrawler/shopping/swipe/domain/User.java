@@ -1,11 +1,12 @@
 package webcrawler.shopping.swipe.domain;
 
-import lombok.Builder;
 import lombok.Data;
-import org.springframework.data.annotation.Id;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+@Entity(name="user")
 @Data
-@Builder
 public class User {
     @Id
     private String id;

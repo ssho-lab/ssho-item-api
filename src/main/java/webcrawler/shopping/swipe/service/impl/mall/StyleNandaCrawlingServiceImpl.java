@@ -1,5 +1,6 @@
 package webcrawler.shopping.swipe.service.impl.mall;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
+@Slf4j
 public class StyleNandaCrawlingServiceImpl implements CrawlingService {
 
     private static String url = "https://www.stylenanda.com/product/list.html?";
@@ -43,7 +45,6 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
 
         List<Item> allProductList = new ArrayList<>();
 
-
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
             for (int pageNo = 0;; pageNo++) {
                 List<Item> productList = crawlAllProductsInOneCategory(pageNo, c);
@@ -51,6 +52,7 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
                 allProductList.addAll(productList);
             }
         }
+
         /*
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
             for (int pageNo = 0; pageNo < 1; pageNo++) {
@@ -60,7 +62,9 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
             }
             break;
         }
+
          */
+
 
         return allProductList;
     }
@@ -116,7 +120,7 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
 
             item.setPrice(priceStr);
 
-            item.setImageUrl("https://" + item.getImageUrl().substring(2));
+            //item.setImageUrl("https://" + item.getImageUrl().substring(2));
 
             item.setLink("https://www.stylenanda.com" + item.getLink());
 

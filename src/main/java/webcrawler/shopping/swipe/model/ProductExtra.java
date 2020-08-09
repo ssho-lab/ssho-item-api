@@ -1,7 +1,9 @@
 package webcrawler.shopping.swipe.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -9,6 +11,8 @@ import java.util.List;
  * 상품 상세 정보 모델
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ProductExtra {
     private List<String> extraImageUrlList;     // 상세 이미지 리스트

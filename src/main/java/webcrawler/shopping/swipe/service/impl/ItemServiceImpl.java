@@ -21,8 +21,6 @@ import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.model.SlackMessage;
 import webcrawler.shopping.swipe.model.log.SwipeLog;
-import webcrawler.shopping.swipe.repository.ItemRepository;
-import webcrawler.shopping.swipe.repository.UserItemRepository;
 import webcrawler.shopping.swipe.service.ItemService;
 
 import java.io.IOException;
@@ -36,20 +34,17 @@ import java.util.stream.Collectors;
 @Service
 public class ItemServiceImpl implements ItemService {
 
-    private final ItemRepository itemRepository;
-    private final UserItemRepository userItemRepository;
     private final WebClient webClient;
+    private final ElasticSearchClientServiceImpl elasticSearchClientService;
+
 
     @Value("${slack.webhook.url}")
     private String slackWebhookUrl;
 
-    public ItemServiceImpl(final ItemRepository itemRepository,
-                           final UserItemRepository userItemRepository,
-                           final WebClient.Builder webClientBuilder){
-        this.itemRepository = itemRepository;
-        this.userItemRepository = userItemRepository;
+    public ItemServiceImpl(final WebClient.Builder webClientBuilder,
+                           final ElasticSearchClientServiceImpl elasticSearchClientService){
         this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
-        //this.webClient = webClientBuilder.baseUrl("http://localhost:8082").build();
+        this.elasticSearchClientService = elasticSearchClientService;
     }
 
     /**
@@ -198,14 +193,9 @@ public class ItemServiceImpl implements ItemService {
         return productExtra;
     }
 
-    /**
-     * DB 업데이트
-     * @param itemList
-     */
     @Override
-    public void updateAll(final List<Item> itemList){
-        itemRepository.deleteAll();
-        itemRepository.saveAll(itemList);
+    public void updateAll(List<Item> itemList) {
+
     }
 
     /**
@@ -237,18 +227,9 @@ public class ItemServiceImpl implements ItemService {
         restTemplate.postForEntity(slackWebhookUrl, slackMessage, String.class);
     }
 
-    /**
-     * 100개 상품 랜덤 추출
-     * @return List<Item>
-     */
     @Override
-    public List<Item> get100Items(){
-
-        List<Item> itemList = itemRepository.findAll();
-
-        Collections.shuffle(itemList);
-
-        return itemList.subList(0,100);
+    public List<Item> get100Items() {
+        return null;
     }
 
     /**
@@ -256,10 +237,9 @@ public class ItemServiceImpl implements ItemService {
      * @return List<Item>
      */
     public List<Item> get20ItemsNotRevealed(final String userId){
-        List<Item> itemList = itemRepository.findAll();
-        List<Item> filteredItemList = new ArrayList<>();
+        List<Item> itemList = elasticSearchClientService.searchItemList("item");
 
-        final List<String> userItemIdList =
+        List<String> userItemIdList =
                 webClient
                 .get().uri("/log/swipe/user?userId={userId}", userId)
                 .retrieve()
@@ -268,9 +248,7 @@ public class ItemServiceImpl implements ItemService {
                         .collectList()
                         .block();
 
-        itemList.stream().filter(item -> !userItemIdList.contains(item.getId()))
-                .forEach(f -> filteredItemList.add(f));
-
+        List<Item> filteredItemList = itemList.stream().filter(item -> !userItemIdList.contains(item.getId())).collect(Collectors.toList());
         Collections.shuffle(filteredItemList);
 
         return filteredItemList.subList(0,20);
@@ -282,7 +260,7 @@ public class ItemServiceImpl implements ItemService {
      */
     @Override
     public List<ItemIdImageUrlMap> get100ItemsIdImageUrlMap(){
-        List<Item> itemList = itemRepository.findAll();
+        List<Item> itemList = elasticSearchClientService.searchItemList("item");
         Collections.shuffle(itemList);
         List<ItemIdImageUrlMap> itemIdImageUrlMapList = new ArrayList<>();
 
@@ -293,32 +271,6 @@ public class ItemServiceImpl implements ItemService {
 
         return itemIdImageUrlMapList;
     }
-
-    /**
-     * 회원별 좋아요 한 상품 조회
-     * @return List<Item>
-     */
-    /*
-    public List<Item> getLikeItemsByUserId(final String userId){
-
-        List<Item> itemList = itemRepository.findAll();
-        List<Item> likeItemList = new ArrayList<>();
-
-        final List<String> userItemIdList =
-                webClient
-                        .get().uri("/log/swipe/user/like?userId={userId}", userId)
-                        .retrieve()
-                        .bodyToFlux(SwipeLog.class)
-                        .map(SwipeLog::getItemId)
-                        .collectList()
-                        .block();
-
-        itemList.stream().filter(item -> userItemIdList.contains(item.getId()))
-                .forEach(f -> likeItemList.add(f));
-
-        return likeItemList;
-    }
-     */
 
     /**
      * 회원별 좋아요 한 상품 조회
@@ -342,7 +294,14 @@ public class ItemServiceImpl implements ItemService {
             List<Item> itemList =
                     swipeLogList
                         .stream()
-                        .map(swipeLog -> itemRepository.findById(swipeLog.getItemId()).get())
+                        .map(swipeLog -> {
+                            try {
+                                return elasticSearchClientService.searchItemById("item", swipeLog.getItemId());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            return null;
+                        })
                         .collect(Collectors.toList());
 
             likedItemsList.add(itemList);

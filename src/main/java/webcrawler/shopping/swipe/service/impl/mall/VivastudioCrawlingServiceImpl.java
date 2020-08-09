@@ -1,5 +1,6 @@
 package webcrawler.shopping.swipe.service.impl.mall;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.select.Elements;
 
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
+@Slf4j
 public class VivastudioCrawlingServiceImpl implements CrawlingService {
 
     private static String url = "http://vivastudio.co.kr/product/list.html?";
@@ -51,6 +53,18 @@ public class VivastudioCrawlingServiceImpl implements CrawlingService {
                 allProductList.addAll(productList);
             }
         }
+        /*
+        for (Map.Entry<String, String> c : categoryMap.entrySet()) {
+            for (int pageNo = 0; pageNo < 1; pageNo++) {
+                List<Item> productList = crawlAllProductsInOneCategory(pageNo, c);
+                if (productList.size() == 0) break;
+                allProductList.addAll(productList);
+            }
+            break;
+        }
+
+         */
+
         return allProductList;
     }
 

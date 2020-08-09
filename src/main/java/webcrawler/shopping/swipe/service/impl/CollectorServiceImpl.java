@@ -1,8 +1,13 @@
 package webcrawler.shopping.swipe.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import webcrawler.shopping.swipe.domain.ExpTag;
 import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.domain.RealTag;
 import webcrawler.shopping.swipe.service.CollectorService;
 import webcrawler.shopping.swipe.service.CrawlingService;
 
@@ -11,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *  개별 쇼핑몰 크롤링 데이터 수합 작업 Impl
+ * 개별 쇼핑몰 크롤링 데이터 수합 작업 Impl
  */
 @Slf4j
 @Service
@@ -22,14 +27,19 @@ public class CollectorServiceImpl implements CollectorService {
 
     private final ItemServiceImpl commonCrawlingService;
 
+    private WebClient webClient;
+
     public CollectorServiceImpl(final List<CrawlingService> crawlingServiceList,
-                                final ItemServiceImpl commonCrawlingService){
+                                final ItemServiceImpl commonCrawlingService,
+                                final WebClient.Builder webClientBuilder) {
         this.crawlingServiceList = crawlingServiceList;
         this.commonCrawlingService = commonCrawlingService;
+        this.webClient = webClientBuilder.baseUrl("http://13.125.68.140:8083").build();
     }
 
     /**
      * 전체 쇼핑몰 크롤링 데이터 수합 및 DB 업데이트
+     *
      * @return List<Item>
      * @throws IOException
      */
@@ -43,13 +53,57 @@ public class CollectorServiceImpl implements CollectorService {
             itemList.addAll(c.crawlAllProductsInAllCategory());
         }
 
-        // TODO: 태깅 API 호출
-        // TODO: realTagId로 expTagId 조회 하는 API 호출
-        // TODO: realTag, expTag set
+        try{
+            List<RealTag> tagList =
+                    webClient
+                            .get().uri("/tag/real")
+                            .retrieve()
+                            .bodyToMono(new ParameterizedTypeReference<List<RealTag>>(){})
+                            .block();
 
-        // DB 업데이트
-        commonCrawlingService.updateAll(itemList);
+            itemList.stream().forEach(item -> {
 
-        return itemList;
+                List<RealTag> realTagList = new ArrayList<>();
+                List<ExpTag> expTagList = new ArrayList<>();
+
+                for(int i = 0; i < 2; i++){
+                    RealTag realTag = tagList.get((int)(Math.random() * tagList.size()));
+                    ExpTag expTag = ExpTag.builder().id(realTag.getId()).name(realTag.getName()).build();
+
+                    if(realTagList.contains(realTag)) continue;
+
+                    realTagList.add(realTag);
+                    expTagList.add(expTag);
+                }
+
+                item.setRealTagList(realTagList);
+                item.setExpTagList(expTagList);
+            });
+
+            // DB 업데이트
+            //commonCrawlingService.updateAll(itemList);
+            updateItemIndex(itemList);
+
+            return itemList;
+        }
+        catch (Exception e){
+            log.info(e.toString());
+            return new ArrayList<>();
+        }
+    }
+
+    private void updateItemIndex(final List<Item> itemList) {
+        changeWebClient("http://13.124.59.2:8082");
+        webClient
+                .post()
+                .uri("/item")
+                .body(Mono.just(itemList),new ParameterizedTypeReference<List<Item>>(){})
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+    }
+
+    private void changeWebClient(final String baseUrl) {
+        this.webClient = WebClient.builder().baseUrl(baseUrl).build();
     }
 }

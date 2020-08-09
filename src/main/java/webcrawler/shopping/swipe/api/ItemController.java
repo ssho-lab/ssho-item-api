@@ -1,6 +1,7 @@
 package webcrawler.shopping.swipe.api;
 
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,7 +41,8 @@ public class ItemController {
      * 4시간에 한 번으로 스케쥴링
      * @throws IOException
      */
-    @Scheduled(cron = "0 0 */4 * * *")
+    //@Scheduled(cron = "0 0 */4 * * *")
+    @GetMapping("/crawling")
     public List<Item> updateItems(){
 
         CrawlingApiAccessLog crawlingApiAccessLog =
@@ -52,10 +54,12 @@ public class ItemController {
         try {
 
             List<Item> itemList = collectorService.collectAndUpdateAllItems();
+
             crawlingApiAccessLog.setStatusCode(201);
 
             itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog, itemList.size());
 
+            log.info("Status Code: {}", 201);
             return itemList;
         }
         catch (Exception e){
@@ -64,6 +68,7 @@ public class ItemController {
 
             itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog, 0);
 
+            log.info("Status Code: {}", 400);
             return new ArrayList<>();
         }
     }
