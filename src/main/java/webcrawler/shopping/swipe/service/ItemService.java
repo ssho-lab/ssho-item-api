@@ -21,8 +21,6 @@ public interface ItemService {
 
     ProductExtra setExtraFields(final Selector selector, final String url, final String host) throws IOException;
 
-    void updateAll(final List<Item> itemList);
-
     void requestCrawlingApiAccessLogSave(final CrawlingApiAccessLog crawlingApiAccessLog, final int itemListSize);
 
     List<Item> get100Items();

@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import webcrawler.shopping.swipe.domain.ExpTag;
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.domain.RealTag;
@@ -25,16 +24,17 @@ public class CollectorServiceImpl implements CollectorService {
     // CrawlingService 타입을 가지는 모든 Bean 주입
     private final List<CrawlingService> crawlingServiceList;
 
-    private final ItemServiceImpl commonCrawlingService;
+    private final ItemServiceImpl itemService;
 
     private WebClient webClient;
 
     public CollectorServiceImpl(final List<CrawlingService> crawlingServiceList,
-                                final ItemServiceImpl commonCrawlingService,
+                                final ItemServiceImpl itemService,
                                 final WebClient.Builder webClientBuilder) {
         this.crawlingServiceList = crawlingServiceList;
-        this.commonCrawlingService = commonCrawlingService;
+        this.itemService = itemService;
         this.webClient = webClientBuilder.baseUrl("http://13.125.68.140:8083").build();
+
     }
 
     /**
@@ -92,18 +92,7 @@ public class CollectorServiceImpl implements CollectorService {
         }
     }
 
-    private void updateItemIndex(final List<Item> itemList) {
-        changeWebClient("http://13.124.59.2:8082");
-        webClient
-                .post()
-                .uri("/item")
-                .body(Mono.just(itemList),new ParameterizedTypeReference<List<Item>>(){})
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-    }
-
-    private void changeWebClient(final String baseUrl) {
-        this.webClient = WebClient.builder().baseUrl(baseUrl).build();
+    private void updateItemIndex(final List<Item> itemList) throws IOException {
+        itemService.updateItem(itemList, "item");
     }
 }

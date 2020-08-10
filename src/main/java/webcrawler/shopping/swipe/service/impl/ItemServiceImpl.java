@@ -1,7 +1,16 @@
 package webcrawler.shopping.swipe.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -36,15 +45,21 @@ public class ItemServiceImpl implements ItemService {
 
     private final WebClient webClient;
     private final ElasticSearchClientServiceImpl elasticSearchClientService;
-
+    private final RestHighLevelClient restHighLevelClient;
+    private final ObjectMapper objectMapper;
 
     @Value("${slack.webhook.url}")
     private String slackWebhookUrl;
 
     public ItemServiceImpl(final WebClient.Builder webClientBuilder,
-                           final ElasticSearchClientServiceImpl elasticSearchClientService){
+                           final ElasticSearchClientServiceImpl elasticSearchClientService,
+                           final RestHighLevelClient restHighLevelClient,
+                           final ObjectMapper objectMapper){
         this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
+        //this.webClient = webClientBuilder.baseUrl("http://localhost:8082").build();
         this.elasticSearchClientService = elasticSearchClientService;
+        this.restHighLevelClient = restHighLevelClient;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -193,9 +208,44 @@ public class ItemServiceImpl implements ItemService {
         return productExtra;
     }
 
-    @Override
-    public void updateAll(List<Item> itemList) {
+    public void updateItem(final List<Item> itemList, final String index) throws IOException {
+        deleteItemList(index);
+        saveItemList(itemList, index);
+    }
 
+    private void saveItemList(final List<Item> itemList, final String index) throws IOException {
+
+        final BulkRequest bulkRequest = new BulkRequest();
+
+        itemList.stream().forEach(item -> {
+
+            // docId 생성
+            final String docId = item.getId();
+
+            IndexRequest indexRequest = null;
+
+            try {
+                indexRequest = new IndexRequest(index)
+                        .id(docId)
+                        .source(objectMapper.writeValueAsString(item), XContentType.JSON);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+
+            bulkRequest.add(indexRequest);
+        });
+
+        // bulk 요청
+        restHighLevelClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+    }
+
+    private void deleteItemList(final String index) throws IOException{
+
+        GetIndexRequest request = new GetIndexRequest("item");
+
+        if(restHighLevelClient.indices().exists(request, RequestOptions.DEFAULT)){
+            restHighLevelClient.indices().delete(new DeleteIndexRequest(index), RequestOptions.DEFAULT);
+        }
     }
 
     /**
@@ -204,14 +254,6 @@ public class ItemServiceImpl implements ItemService {
      */
     @Override
     public void requestCrawlingApiAccessLogSave(final CrawlingApiAccessLog crawlingApiAccessLog, final int itemListSize){
-
-        // crawling api call
-        webClient
-                .post().uri("/log/crawling-api")
-                .bodyValue(crawlingApiAccessLog)
-                .retrieve()
-                .bodyToMono(CrawlingApiAccessLog.class)
-                .block();
 
         // slack webhook call
         SlackMessage slackMessage = new SlackMessage();
@@ -229,7 +271,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<Item> get100Items() {
-        return null;
+        return elasticSearchClientService.searchItemList("item", 100);
     }
 
     /**
@@ -237,7 +279,7 @@ public class ItemServiceImpl implements ItemService {
      * @return List<Item>
      */
     public List<Item> get20ItemsNotRevealed(final String userId){
-        List<Item> itemList = elasticSearchClientService.searchItemList("item");
+        List<Item> itemList = elasticSearchClientService.searchItemList("item", 1000);
 
         List<String> userItemIdList =
                 webClient
@@ -260,7 +302,7 @@ public class ItemServiceImpl implements ItemService {
      */
     @Override
     public List<ItemIdImageUrlMap> get100ItemsIdImageUrlMap(){
-        List<Item> itemList = elasticSearchClientService.searchItemList("item");
+        List<Item> itemList = elasticSearchClientService.searchItemList("item", 1000);
         Collections.shuffle(itemList);
         List<ItemIdImageUrlMap> itemIdImageUrlMapList = new ArrayList<>();
 

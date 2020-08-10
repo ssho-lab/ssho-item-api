@@ -65,7 +65,6 @@ public class StyleNandaCrawlingServiceImpl implements CrawlingService {
 
          */
 
-
         return allProductList;
     }
 

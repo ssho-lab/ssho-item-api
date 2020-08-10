@@ -31,14 +31,14 @@ public class ElasticSearchClientServiceImpl {
         this.objectMapper = objectMapper;
     }
 
-    public List<Item> searchItemList(final String index){
+    public List<Item> searchItemList(final String index, final int size){
         // ES에 요청 보내기
         SearchRequest searchRequest = new SearchRequest(index);
 
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 
         // search query 최대 크기 set
-        sourceBuilder.size(1000);
+        sourceBuilder.size(size);
 
         searchRequest.source(sourceBuilder);
 

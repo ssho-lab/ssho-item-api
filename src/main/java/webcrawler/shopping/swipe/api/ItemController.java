@@ -41,8 +41,8 @@ public class ItemController {
      * 4시간에 한 번으로 스케쥴링
      * @throws IOException
      */
-    //@Scheduled(cron = "0 0 */4 * * *")
-    @GetMapping("/crawling")
+    @Scheduled(cron = "0 0 */4 * * *")
+    //@GetMapping("/crawling")
     public List<Item> updateItems(){
 
         CrawlingApiAccessLog crawlingApiAccessLog =

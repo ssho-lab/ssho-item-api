@@ -53,6 +53,7 @@ public class VivastudioCrawlingServiceImpl implements CrawlingService {
                 allProductList.addAll(productList);
             }
         }
+
         /*
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
             for (int pageNo = 0; pageNo < 1; pageNo++) {
