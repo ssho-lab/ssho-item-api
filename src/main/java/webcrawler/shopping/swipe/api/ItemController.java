@@ -1,13 +1,11 @@
 package webcrawler.shopping.swipe.api;
 
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.service.impl.CollectorServiceImpl;
@@ -38,11 +36,10 @@ public class ItemController {
 
     /**
      * 전체 쇼핑몰 데이터 크롤링 + DB 업데이트
-     * 4시간에 한 번으로 스케쥴링
+     * 6시간에 한 번으로 스케쥴링
      * @throws IOException
      */
-    @Scheduled(cron = "0 0 */4 * * *")
-    //@GetMapping("/crawling")
+    @Scheduled(cron = "0 0 */6 * * *")
     public List<Item> updateItems(){
 
         CrawlingApiAccessLog crawlingApiAccessLog =
@@ -73,13 +70,9 @@ public class ItemController {
         }
     }
 
-    /**
-     * 카드덱 전체 상품 조회 (100개)
-     * @return List<Item>
-     */
-    @GetMapping
-    public List<Item> getItemsForCardDeck(){
-        return itemService.get100Items();
+    @GetMapping("")
+    public List<Item> getItemList(){
+        return itemService.getItems();
     }
 
     /**

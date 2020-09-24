@@ -15,7 +15,7 @@ import java.util.*;
 
 @Service
 @Slf4j
-public class VivastudioCrawlingServiceImpl implements CrawlingService {
+public class VivastudioCrawlingService implements CrawlingService {
 
     private static String url = "http://vivastudio.co.kr/product/list.html?";
     private static String host = "http://vivastudio.co.kr/";
@@ -33,7 +33,7 @@ public class VivastudioCrawlingServiceImpl implements CrawlingService {
 
     private final ItemServiceImpl commonCrawlingService;
 
-    public VivastudioCrawlingServiceImpl(final ItemServiceImpl commonCrawlingService){
+    public VivastudioCrawlingService(final ItemServiceImpl commonCrawlingService){
         this.commonCrawlingService = commonCrawlingService;
     }
 

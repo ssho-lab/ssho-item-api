@@ -81,9 +81,9 @@ public class CollectorServiceImpl implements CollectorService {
             });
 
             // DB 업데이트
-            //commonCrawlingService.updateAll(itemList);
-            updateItemIndex(itemList);
-
+            if(itemList.size() > 0) {
+                updateItemIndex(itemList);
+            }
             return itemList;
         }
         catch (Exception e){

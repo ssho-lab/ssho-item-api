@@ -56,7 +56,6 @@ public class ItemServiceImpl implements ItemService {
                            final RestHighLevelClient restHighLevelClient,
                            final ObjectMapper objectMapper){
         this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
-        //this.webClient = webClientBuilder.baseUrl("http://localhost:8082").build();
         this.elasticSearchClientService = elasticSearchClientService;
         this.restHighLevelClient = restHighLevelClient;
         this.objectMapper = objectMapper;
@@ -117,6 +116,7 @@ public class ItemServiceImpl implements ItemService {
             for (String s : selector.getPrice()) {
                 temp = element.select(s);
             }
+
             String price = temp.text();
 
             // 이미지 Url(ImageUrl)
@@ -181,7 +181,7 @@ public class ItemServiceImpl implements ItemService {
             elements = elements.select(selector.getDescription().get(i));
         }
 
-        String description = elements.get(0).text();
+        String description = elements.size() == 0 ? "" : elements.get(0).text();
 
         // 상품 사이즈 리스트(SizeList)
         List<String> sizeList = new ArrayList<>();
@@ -272,6 +272,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<Item> get100Items() {
         return elasticSearchClientService.searchItemList("item", 100);
+    }
+
+    public List<Item> getItems(){
+        return elasticSearchClientService.searchItemList("item", 10000);
     }
 
     /**
