@@ -84,7 +84,7 @@ public class StyleNandaCrawlingService implements CrawlingService {
         Selector selector = Selector.builder()
                 .topNode(new ArrayList<>(Arrays.asList(".column4 li")))
                 .title(new ArrayList<>(Arrays.asList(".name span")))
-                .price(new ArrayList<>(Arrays.asList(".price", "p")))
+                .price(new ArrayList<>(Arrays.asList(".price")))
                 .imageUrl(new ArrayList<>(Arrays.asList(".box", "a", "img")))
                 .link(new ArrayList<>(Arrays.asList(".box", "a")))
                 .extraImageUrl(new ArrayList<>(Arrays.asList(".d_proimage img")))

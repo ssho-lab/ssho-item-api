@@ -4,13 +4,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.service.impl.CollectorServiceImpl;
 import webcrawler.shopping.swipe.service.impl.ItemServiceImpl;
+import webcrawler.shopping.swipe.util.auth.Auth;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,7 +57,6 @@ public class ItemController {
 
             itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog, itemList.size());
 
-            log.info("Status Code: {}", 201);
             return itemList;
         }
         catch (Exception e){
@@ -65,7 +65,6 @@ public class ItemController {
 
             itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog, 0);
 
-            log.info("Status Code: {}", 400);
             return new ArrayList<>();
         }
     }
@@ -75,21 +74,19 @@ public class ItemController {
         return itemService.getItems();
     }
 
-    /**
-     * 테스트 웹 용 상품 조회(20개)
-     * @return List<Item>
-     */
-    @GetMapping("/test")
-    public List<Item> getItemsTestWeb(@RequestParam("userId") final String userId){
-        return itemService.get20ItemsNotRevealed(userId);
+    @GetMapping("/initial")
+    public List<Item> getInitialItemList() {
+        return itemService.get20Items();
     }
 
     /**
      * 회원별 좋아요한 상품 조회
      * @return List<Item>
      */
-    @GetMapping("/test/like")
-    public List<List<Item>> getLikeItemsByUserId(@RequestParam("userId") final String userId){
+    @Auth
+    @GetMapping("/shopping-bag")
+    public List<List<Item>> getLikeItemsByUserId(final HttpServletRequest httpServletRequest){
+        final String userId = String.valueOf(httpServletRequest.getAttribute("userId"));
         return itemService.getLikeItemsByUserId(userId);
     }
 }

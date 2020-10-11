@@ -9,6 +9,11 @@ import javax.persistence.Id;
 @Data
 public class User {
     @Id
-    private String id;
+    private int id;
+
+    private String email;
+    private String password;
     private String name;
+
+    private boolean admin;
 }

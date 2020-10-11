@@ -63,8 +63,7 @@ public class VivastudioCrawlingService implements CrawlingService {
             }
             break;
         }
-
-         */
+        */
 
         return allProductList;
     }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
@@ -208,9 +209,43 @@ public class ItemServiceImpl implements ItemService {
         return productExtra;
     }
 
-    public void updateItem(final List<Item> itemList, final String index) throws IOException {
-        deleteItemList(index);
+    public void updateItemRt(final List<Item> itemList, final String index) throws IOException {
+        if(elasticSearchClientService.indexExist(index)){
+            deleteItemList(index);
+        }
         saveItemList(itemList, index);
+    }
+
+    public void updateItemCum(final List<Item> itemList, final String index) throws IOException {
+
+        if(elasticSearchClientService.indexExist(index)){
+            for (Item item : itemList) {
+                // 누적 상품 인덱스에 없는 상품을 경우 추가
+                if (elasticSearchClientService.searchItemById(index, item.getId()).equals(new Item())){
+                    saveItem(item, index);
+                }
+            }
+        }
+
+        else {
+            for (Item item : itemList) {
+                saveItem(item, index);
+            }
+        }
+    }
+
+    private void saveItem(final Item item, final String index) throws IOException {
+
+        // docId 생성
+        final String docId = item.getId();
+
+        try {
+            restHighLevelClient.index(new IndexRequest(index)
+                    .id(docId)
+                    .source(objectMapper.writeValueAsString(item), XContentType.JSON), RequestOptions.DEFAULT);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     private void saveItemList(final List<Item> itemList, final String index) throws IOException {
@@ -275,8 +310,13 @@ public class ItemServiceImpl implements ItemService {
     }
 
     public List<Item> getItems(){
-        return elasticSearchClientService.searchItemList("item", 10000);
+
+        List<Item> itemList = elasticSearchClientService.searchItemList("item", 10000);
+        Collections.sort(itemList);
+        return itemList;
     }
+
+    public List<Item> get20Items(){ return elasticSearchClientService.searchRandomItemList("item", 20); }
 
     /**
      * 20개 상품 랜덤 추출 (이미 본 상품 제외)
@@ -297,7 +337,8 @@ public class ItemServiceImpl implements ItemService {
         List<Item> filteredItemList = itemList.stream().filter(item -> !userItemIdList.contains(item.getId())).collect(Collectors.toList());
         Collections.shuffle(filteredItemList);
 
-        return filteredItemList.subList(0,20);
+        return filteredItemList.size() >= 20 ?
+                filteredItemList.subList(0,20) : filteredItemList.subList(0,filteredItemList.size());
     }
 
     /**
@@ -332,6 +373,11 @@ public class ItemServiceImpl implements ItemService {
                         .retrieve()
                         .bodyToMono(new ParameterizedTypeReference<Map<Integer, List<SwipeLog>>>() {})
                         .block();
+
+        // 스와이프 로그 이력이 없을 경우
+        if(groupedSwipeLogList.size() == 0) {
+            return likedItemsList;
+        }
 
         for(Map.Entry<Integer, List<SwipeLog>> entry : groupedSwipeLogList.entrySet()){
 

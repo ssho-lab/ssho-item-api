@@ -1,6 +1,7 @@
 package webcrawler.shopping.swipe.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -48,13 +49,15 @@ public class CollectorServiceImpl implements CollectorService {
 
         List<Item> itemList = new ArrayList<>();
 
-        // 개별 쇼핑몰 크롤링 impl 전체 loop
+        // 개별 쇼핑몰 크롤링 서비스 전체 loop
         for (CrawlingService c : crawlingServiceList) {
             itemList.addAll(c.crawlAllProductsInAllCategory());
         }
 
         try{
-            List<RealTag> tagList =
+
+            // 태그 랜덤덤
+           List<RealTag> tagList =
                     webClient
                             .get().uri("/tag/real")
                             .retrieve()
@@ -80,19 +83,26 @@ public class CollectorServiceImpl implements CollectorService {
                 item.setExpTagList(expTagList);
             });
 
-            // DB 업데이트
+            // ES 상품 인덱스 업데이트
             if(itemList.size() > 0) {
-                updateItemIndex(itemList);
+                // 누적 상품 인덱스 업데이트
+                updateItemCumIndex(itemList);
+
+                // 리얼타임 상품 인덱스 업데이트
+                updateItemRtIndex(itemList);
             }
             return itemList;
         }
-        catch (Exception e){
-            log.info(e.toString());
-            return new ArrayList<>();
+        catch (ElasticsearchStatusException e){
+            return itemList;
         }
     }
 
-    private void updateItemIndex(final List<Item> itemList) throws IOException {
-        itemService.updateItem(itemList, "item");
+    private void updateItemCumIndex(final List<Item> itemList) throws IOException {
+        itemService.updateItemCum(itemList, "item-cum");
+    }
+
+    private void updateItemRtIndex(final List<Item> itemList) throws IOException {
+        itemService.updateItemRt(itemList, "item-rt");
     }
 }
