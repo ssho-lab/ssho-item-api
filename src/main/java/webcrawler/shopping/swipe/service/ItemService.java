@@ -3,6 +3,7 @@ package webcrawler.shopping.swipe.service;
 import org.jsoup.select.Elements;
 import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
 import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.domain.Tag;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
@@ -26,4 +27,6 @@ public interface ItemService {
     List<Item> get100Items();
 
     List<ItemIdImageUrlMap> get100ItemsIdImageUrlMap();
+
+    void deleteTag(final Tag tag, final String itemId) throws IOException;
 }

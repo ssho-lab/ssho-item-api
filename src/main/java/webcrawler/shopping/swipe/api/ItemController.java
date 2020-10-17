@@ -2,11 +2,10 @@ package webcrawler.shopping.swipe.api;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
 import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.domain.Tag;
 import webcrawler.shopping.swipe.service.impl.CollectorServiceImpl;
 import webcrawler.shopping.swipe.service.impl.ItemServiceImpl;
 import webcrawler.shopping.swipe.util.auth.Auth;
@@ -17,10 +16,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
-/**
- * 크롤링 컨트롤러
- */
 @Slf4j
 @RestController
 @RequestMapping("/item")
@@ -41,6 +36,7 @@ public class ItemController {
      * @throws IOException
      */
     @Scheduled(cron = "0 0 */6 * * *")
+    @GetMapping("/update")
     public List<Item> updateItems(){
 
         CrawlingApiAccessLog crawlingApiAccessLog =
@@ -88,5 +84,10 @@ public class ItemController {
     public List<List<Item>> getLikeItemsByUserId(final HttpServletRequest httpServletRequest){
         final String userId = String.valueOf(httpServletRequest.getAttribute("userId"));
         return itemService.getLikeItemsByUserId(userId);
+    }
+
+    @PostMapping("/untagging")
+    public void deleteTag(@RequestBody final Tag tag, @RequestParam("itemId") final String itemId) throws IOException {
+        itemService.deleteTag(tag, itemId);
     }
 }

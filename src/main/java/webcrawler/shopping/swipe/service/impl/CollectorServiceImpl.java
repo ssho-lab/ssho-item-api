@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import webcrawler.shopping.swipe.domain.ExpTag;
 import webcrawler.shopping.swipe.domain.Item;
 import webcrawler.shopping.swipe.domain.RealTag;
+import webcrawler.shopping.swipe.domain.Tag;
 import webcrawler.shopping.swipe.service.CollectorService;
 import webcrawler.shopping.swipe.service.CrawlingService;
 
@@ -54,37 +55,34 @@ public class CollectorServiceImpl implements CollectorService {
             itemList.addAll(c.crawlAllProductsInAllCategory());
         }
 
-        try{
-
-            // 태그 랜덤덤
-           List<RealTag> tagList =
+        try {
+            // 전체 리얼 태그 조회
+            List<RealTag> realTagList =
                     webClient
                             .get().uri("/tag/real")
                             .retrieve()
-                            .bodyToMono(new ParameterizedTypeReference<List<RealTag>>(){})
+                            .bodyToMono(new ParameterizedTypeReference<List<RealTag>>() {
+                            })
                             .block();
 
             itemList.stream().forEach(item -> {
 
-                List<RealTag> realTagList = new ArrayList<>();
-                List<ExpTag> expTagList = new ArrayList<>();
+                List<Tag> tagList = new ArrayList<>();
 
-                for(int i = 0; i < 2; i++){
-                    RealTag realTag = tagList.get((int)(Math.random() * tagList.size()));
+                for (int i = 0; i < 2; i++) {
+                    RealTag realTag = realTagList.get((int) (Math.random() * realTagList.size()));
                     ExpTag expTag = ExpTag.builder().id(realTag.getId()).name(realTag.getName()).build();
 
-                    if(realTagList.contains(realTag)) continue;
+                    List<RealTag> tempRealTagList = new ArrayList<>();
+                    tempRealTagList.add(realTag);
 
-                    realTagList.add(realTag);
-                    expTagList.add(expTag);
+                    tagList.add(Tag.builder().expTag(expTag).realTagList(tempRealTagList).build());
                 }
-
-                item.setRealTagList(realTagList);
-                item.setExpTagList(expTagList);
+                item.setTagList(tagList);
             });
 
             // ES 상품 인덱스 업데이트
-            if(itemList.size() > 0) {
+            if (itemList.size() > 0) {
                 // 누적 상품 인덱스 업데이트
                 updateItemCumIndex(itemList);
 
@@ -92,8 +90,8 @@ public class CollectorServiceImpl implements CollectorService {
                 updateItemRtIndex(itemList);
             }
             return itemList;
-        }
-        catch (ElasticsearchStatusException e){
+        } catch (ElasticsearchStatusException e) {
+            log.info(e.toString());
             return itemList;
         }
     }

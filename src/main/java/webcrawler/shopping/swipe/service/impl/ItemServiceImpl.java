@@ -2,16 +2,25 @@ package webcrawler.shopping.swipe.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.netty.util.concurrent.UnaryPromiseNotifier;
 import lombok.extern.slf4j.Slf4j;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.UpdateByQueryAction;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptType;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -26,6 +35,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
 import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.domain.RealTag;
+import webcrawler.shopping.swipe.domain.Tag;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
@@ -311,7 +322,7 @@ public class ItemServiceImpl implements ItemService {
 
     public List<Item> getItems(){
 
-        List<Item> itemList = elasticSearchClientService.searchItemList("item", 10000);
+        List<Item> itemList = elasticSearchClientService.searchItemList("item-rt", 10000);
         Collections.sort(itemList);
         return itemList;
     }
@@ -400,5 +411,37 @@ public class ItemServiceImpl implements ItemService {
         }
 
         return likedItemsList;
+    }
+
+    @Override
+    public void deleteTag(final Tag tag, final String itemId) throws IOException {
+
+        UpdateRequest updateRequest = new UpdateRequest("item-rt", itemId);
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("expTagId", tag.getExpTag().getId());
+        Script script = new Script(ScriptType.STORED, null, "delete-tag-script", parameters);
+        updateRequest.script(script);
+
+        restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
+    }
+
+    private boolean compareTag(final Tag prevTag, final Tag postTag){
+        if(prevTag.getRealTagList().size() != postTag.getRealTagList().size()){
+            return false;
+        }
+        if(!prevTag.getExpTag().equals(postTag.getExpTag())) {
+            return false;
+        }
+
+        List<RealTag> prevRealTagList = prevTag.getRealTagList();
+        List<RealTag> postRealTagList = postTag.getRealTagList();
+
+        for(int i = 0; i < prevRealTagList.size(); i++){
+            if(!prevRealTagList.get(i).equals(postRealTagList.get(i))){
+                return false;
+            }
+        }
+        return true;
     }
 }
