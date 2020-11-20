@@ -1,4 +1,4 @@
-package webcrawler.shopping.swipe.service.impl;
+package webcrawler.shopping.swipe.service.user;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;

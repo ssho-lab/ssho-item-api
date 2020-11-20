@@ -1,9 +1,8 @@
-package webcrawler.shopping.swipe.service.impl;
+package webcrawler.shopping.swipe.service.user;
 
 import org.springframework.stereotype.Service;
-import webcrawler.shopping.swipe.domain.User;
+import webcrawler.shopping.swipe.domain.user.model.User;
 import webcrawler.shopping.swipe.repository.UserRepository;
-import webcrawler.shopping.swipe.service.UserService;
 
 import java.util.Optional;
 

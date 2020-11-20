@@ -1,4 +1,4 @@
-package webcrawler.shopping.swipe.domain;
+package webcrawler.shopping.swipe.domain.user.model;
 
 import lombok.Data;
 

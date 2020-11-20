@@ -1,51 +1,43 @@
-package webcrawler.shopping.swipe.service.impl;
+package webcrawler.shopping.swipe.service.item;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.netty.util.concurrent.UnaryPromiseNotifier;
 import lombok.extern.slf4j.Slf4j;
-
-import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.reindex.UpdateByQueryAction;
-import org.elasticsearch.index.reindex.UpdateByQueryRequest;
-import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptType;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
-import webcrawler.shopping.swipe.domain.Item;
-import webcrawler.shopping.swipe.domain.RealTag;
-import webcrawler.shopping.swipe.domain.Tag;
+import webcrawler.shopping.swipe.domain.item.model.Item;
+import webcrawler.shopping.swipe.domain.tag.model.Tag;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
 import webcrawler.shopping.swipe.model.SlackMessage;
 import webcrawler.shopping.swipe.model.log.SwipeLog;
-import webcrawler.shopping.swipe.service.ItemService;
+import webcrawler.shopping.swipe.service.ElasticSearchClientServiceImpl;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -67,7 +59,7 @@ public class ItemServiceImpl implements ItemService {
                            final ElasticSearchClientServiceImpl elasticSearchClientService,
                            final RestHighLevelClient restHighLevelClient,
                            final ObjectMapper objectMapper){
-        this.webClient = webClientBuilder.baseUrl("http://13.124.59.2:8082").build();
+        this.webClient = webClientBuilder.baseUrl("http://api.ssho.tech:8082").build();
         this.elasticSearchClientService = elasticSearchClientService;
         this.restHighLevelClient = restHighLevelClient;
         this.objectMapper = objectMapper;
@@ -414,34 +406,17 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public void deleteTag(final Tag tag, final String itemId) throws IOException {
+    public void updateTagList(final List<Tag> tagList, final String itemId) throws IOException {
 
-        UpdateRequest updateRequest = new UpdateRequest("item-rt", itemId);
+        GetResponse getResponse  = restHighLevelClient.get(new GetRequest("item-rt", itemId), RequestOptions.DEFAULT);
 
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("expTagId", tag.getExpTag().getId());
-        Script script = new Script(ScriptType.STORED, null, "delete-tag-script", parameters);
-        updateRequest.script(script);
+        Item item = objectMapper.readValue(getResponse.getSourceAsString(), Item.class);
+        item.setTagList(tagList);
 
-        restHighLevelClient.update(updateRequest, RequestOptions.DEFAULT);
-    }
+        restHighLevelClient.delete(new DeleteRequest("item-rt", itemId), RequestOptions.DEFAULT);
 
-    private boolean compareTag(final Tag prevTag, final Tag postTag){
-        if(prevTag.getRealTagList().size() != postTag.getRealTagList().size()){
-            return false;
-        }
-        if(!prevTag.getExpTag().equals(postTag.getExpTag())) {
-            return false;
-        }
-
-        List<RealTag> prevRealTagList = prevTag.getRealTagList();
-        List<RealTag> postRealTagList = postTag.getRealTagList();
-
-        for(int i = 0; i < prevRealTagList.size(); i++){
-            if(!prevRealTagList.get(i).equals(postRealTagList.get(i))){
-                return false;
-            }
-        }
-        return true;
+        restHighLevelClient.index(new IndexRequest("item-rt")
+                .id(itemId)
+                .source(objectMapper.writeValueAsString(item), XContentType.JSON), RequestOptions.DEFAULT);
     }
 }

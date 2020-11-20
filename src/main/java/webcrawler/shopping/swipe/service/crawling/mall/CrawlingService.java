@@ -1,6 +1,6 @@
-package webcrawler.shopping.swipe.service;
+package webcrawler.shopping.swipe.service.crawling.mall;
 
-import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.domain.item.model.Item;
 
 import java.io.IOException;
 import java.util.List;

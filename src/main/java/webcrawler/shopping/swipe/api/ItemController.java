@@ -1,13 +1,12 @@
 package webcrawler.shopping.swipe.api;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
-import webcrawler.shopping.swipe.domain.Item;
-import webcrawler.shopping.swipe.domain.Tag;
-import webcrawler.shopping.swipe.service.impl.CollectorServiceImpl;
-import webcrawler.shopping.swipe.service.impl.ItemServiceImpl;
+import webcrawler.shopping.swipe.domain.item.model.Item;
+import webcrawler.shopping.swipe.domain.tag.model.Tag;
+import webcrawler.shopping.swipe.service.collector.CollectorServiceImpl;
+import webcrawler.shopping.swipe.service.item.ItemServiceImpl;
 import webcrawler.shopping.swipe.util.auth.Auth;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,9 +34,9 @@ public class ItemController {
      * 6시간에 한 번으로 스케쥴링
      * @throws IOException
      */
-    @Scheduled(cron = "0 0 */6 * * *")
-    @GetMapping("/update")
-    public List<Item> updateItems(){
+    //@Scheduled(cron = "0 0 */6 * * *")
+    @GetMapping("/update/all")
+    public List<Item> updateAllMallItems(){
 
         CrawlingApiAccessLog crawlingApiAccessLog =
                 CrawlingApiAccessLog.builder()
@@ -47,7 +46,7 @@ public class ItemController {
 
         try {
 
-            List<Item> itemList = collectorService.collectAndUpdateAllItems();
+            List<Item> itemList = collectorService.updateAllMalls();
 
             crawlingApiAccessLog.setStatusCode(201);
 
@@ -65,14 +64,34 @@ public class ItemController {
         }
     }
 
-    @GetMapping("")
-    public List<Item> getItemList(){
-        return itemService.getItems();
-    }
+    @GetMapping("/update/one")
+    public List<Item> updateOneMallItems(){
 
-    @GetMapping("/initial")
-    public List<Item> getInitialItemList() {
-        return itemService.get20Items();
+        CrawlingApiAccessLog crawlingApiAccessLog =
+                CrawlingApiAccessLog.builder()
+                        .path("/item")
+                        .accessTime(LocalDateTime.now())
+                        .build();
+
+        try {
+
+            List<Item> itemList = collectorService.updateMall();
+
+            crawlingApiAccessLog.setStatusCode(201);
+
+            itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog, itemList.size());
+
+            return itemList;
+        }
+
+        catch (Exception e){
+
+            crawlingApiAccessLog.setStatusCode(400);
+
+            itemService.requestCrawlingApiAccessLogSave(crawlingApiAccessLog, 0);
+
+            return new ArrayList<>();
+        }
     }
 
     /**
@@ -86,8 +105,28 @@ public class ItemController {
         return itemService.getLikeItemsByUserId(userId);
     }
 
-    @PostMapping("/untagging")
-    public void deleteTag(@RequestBody final Tag tag, @RequestParam("itemId") final String itemId) throws IOException {
-        itemService.deleteTag(tag, itemId);
+    /**
+     * 상품 태그 업데이트
+     * @param tagList
+     * @param itemId
+     * @throws IOException
+     */
+    @PostMapping("/update/tag")
+    public void updateTag(@RequestBody List<Tag> tagList, @RequestParam("itemId") final String itemId) throws IOException {
+        itemService.updateTagList(tagList, itemId);
+    }
+
+    /**
+     * 상품 전체 조회
+     * @return
+     */
+    @GetMapping("")
+    public List<Item> getItemList(){
+        return itemService.getItems();
+    }
+
+    @GetMapping("/initial")
+    public List<Item> getInitialItemList() {
+        return itemService.get20Items();
     }
 }

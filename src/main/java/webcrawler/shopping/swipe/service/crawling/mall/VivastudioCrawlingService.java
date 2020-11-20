@@ -1,14 +1,13 @@
-package webcrawler.shopping.swipe.service.impl.mall;
+package webcrawler.shopping.swipe.service.crawling.mall;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.select.Elements;
 
 import org.springframework.stereotype.Service;
 
-import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.domain.item.model.Item;
 import webcrawler.shopping.swipe.model.Selector;
-import webcrawler.shopping.swipe.service.CrawlingService;
-import webcrawler.shopping.swipe.service.impl.ItemServiceImpl;
+import webcrawler.shopping.swipe.service.item.ItemServiceImpl;
 
 import java.io.IOException;
 import java.util.*;

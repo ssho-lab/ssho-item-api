@@ -1,38 +1,33 @@
-package webcrawler.shopping.swipe.service.impl.mall;
+package webcrawler.shopping.swipe.service.crawling.mall;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
-import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.domain.item.model.Item;
 import webcrawler.shopping.swipe.model.Selector;
-import webcrawler.shopping.swipe.service.CrawlingService;
-import webcrawler.shopping.swipe.service.impl.ItemServiceImpl;
+import webcrawler.shopping.swipe.service.item.ItemServiceImpl;
 
 import java.io.IOException;
 import java.util.*;
 
 @Service
 @Slf4j
-public class LookAtMinCrawlingService implements CrawlingService {
+public class ThomasMoreCrawlingService implements CrawlingService {
 
-    private static String url = "http://lookatmin.com/product/list.html?";
-    private static String host = "http://lookatmin.com/";
+    private static String url = "https://thomasmore.co.kr/product/list.html?";
+    private static String host = "http://thomasmore.co.kr/";
     private static HashMap<String, String> categoryMap = new HashMap<String, String>() {{
-        put("OUTER", "42");
-        put("TEE/TOP", "43");
-        put("DRESS", "44");
-        put("BOTTOM", "45");
-        put("TRAINING", "60");
-        put("SWIM WEAR", "57");
-        put("SHOES", "46");
-        put("BAG", "48");
-        put("ACCESSORY", "47");
-        put("HAT", "56");
+        put("T-SHIRTS", "25");
+        put("SHIRTS", "26");
+        put("SWEATERS", "27");
+        put("PANTS", "28");
+        put("OUTWEARS", "29");
+        put("ACC", "36");
     }};
 
     private final ItemServiceImpl commonCrawlingService;
 
-    public LookAtMinCrawlingService(final ItemServiceImpl commonCrawlingService) {
+    public ThomasMoreCrawlingService(final ItemServiceImpl commonCrawlingService) {
         this.commonCrawlingService = commonCrawlingService;
     }
 
@@ -46,6 +41,7 @@ public class LookAtMinCrawlingService implements CrawlingService {
     public List<Item> crawlAllProductsInAllCategory() throws IOException {
 
         List<Item> allProductList = new ArrayList<>();
+
 
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
             for (int pageNo = 0;; pageNo++) {
@@ -85,11 +81,11 @@ public class LookAtMinCrawlingService implements CrawlingService {
 
         // 크롤링시 사용할 Selector 객체 생성
         Selector selector = Selector.builder()
-                .topNode(new ArrayList<>(Arrays.asList(".prdList > li")))
-                .title(new ArrayList<>(Arrays.asList(".description > strong", "a > span:eq(1)")))
-                .price(new ArrayList<>(Arrays.asList(".description > ul > li:last-child > span")))
-                .imageUrl(new ArrayList<>(Arrays.asList(".thumbnail > div > a > img")))
-                .link(new ArrayList<>(Arrays.asList(".thumbnail > div > a")))
+                .topNode(new ArrayList<>(Arrays.asList(".grid4 > li")))
+                .title(new ArrayList<>(Arrays.asList("div > p.name > a > span")))
+                .price(new ArrayList<>(Arrays.asList("div > p.prices > span")))
+                .imageUrl(new ArrayList<>(Arrays.asList("div > div.hoverimg > a > img")))
+                .link(new ArrayList<>(Arrays.asList("div > div.hoverimg > a")))
                 .extraImageUrl(new ArrayList<>(Arrays.asList(".d_proimage img")))
                 .description(new ArrayList<>(Arrays.asList("#detailArea", ".cont > p")))
                 .size(new ArrayList<>(Arrays.asList(".ec-product-disabled", "span")))
@@ -108,27 +104,36 @@ public class LookAtMinCrawlingService implements CrawlingService {
         // 필드 로컬 작업
         for (Item item : itemList) {
 
-            String priceStr = item.getPrice().replace("원 ", "");
-
-            priceStr = priceStr.replace(",", "");
-
-            item.setPrice(priceStr);
+            if(item.getPrice().contains(" ₩")){
+                item.setPrice(item.getPrice().split("\\₩")[1]
+                        .replace(" ", "")
+                        .replace("₩", "")
+                        .replace(",", ""));
+            }
+            else{
+                item.setPrice(item.getPrice()
+                        .replace(" ", "")
+                        .replace(" ", "")
+                        .replace("₩", "")
+                        .replace(",", ""));
+            }
 
             item.setImageUrl("https://" + item.getImageUrl().substring(2));
 
-            item.setLink("https://www.lookatmin.com" + item.getLink());
+            item.setLink("https://www.thomasmore.co.kr" + item.getLink());
 
-            item.setMallNo("0003");
+            item.setMallNo("0004");
 
-            item.setId(item.getMallNo() + item.getLink().split("/")[5]);
+            item.setId(item.getMallNo() + item.getLink().split("\\?")[1].split("&")[0].split("=")[1]);
 
-            item.setMallNm("룩앳민");
+            item.setMallNm("토마스모어");
 
             item.setCategory(category.getKey());
 
             // extra 필드 추가
             item.setProductExtra(commonCrawlingService.setExtraFields(selector, item.getLink(), host));
         }
+
         return itemList;
     }
 }

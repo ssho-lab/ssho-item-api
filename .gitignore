@@ -27,9 +27,8 @@ target/
 /.nb-gradle/
 build/
 
-### VS Code ###
-.vscode/
-
 application.yml
 
 /src/test
+
+deploy.sh

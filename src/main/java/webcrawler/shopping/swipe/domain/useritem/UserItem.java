@@ -1,4 +1,4 @@
-package webcrawler.shopping.swipe.domain;
+package webcrawler.shopping.swipe.domain.useritem;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;

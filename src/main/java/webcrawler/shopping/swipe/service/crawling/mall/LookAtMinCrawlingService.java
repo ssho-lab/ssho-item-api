@@ -1,37 +1,37 @@
-package webcrawler.shopping.swipe.service.impl.mall;
+package webcrawler.shopping.swipe.service.crawling.mall;
 
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
 import org.springframework.stereotype.Service;
-import webcrawler.shopping.swipe.domain.Item;
+import webcrawler.shopping.swipe.domain.item.model.Item;
 import webcrawler.shopping.swipe.model.Selector;
-import webcrawler.shopping.swipe.service.CrawlingService;
-import webcrawler.shopping.swipe.service.impl.ItemServiceImpl;
+import webcrawler.shopping.swipe.service.item.ItemServiceImpl;
 
 import java.io.IOException;
 import java.util.*;
 
 @Service
 @Slf4j
-public class CustomMellowCrawlingService implements CrawlingService {
+public class LookAtMinCrawlingService implements CrawlingService {
 
-    private static String url = "https://www.kolonmall.com/CUSTOMELLOW/List/";
-    private static String host = "https://www.kolonmall.com/";
+    private static String url = "http://lookatmin.com/product/list.html?";
+    private static String host = "http://lookatmin.com/";
     private static HashMap<String, String> categoryMap = new HashMap<String, String>() {{
-        put("OUTER", "4972");
-        put("TOP", "4973");
-        put("BOTTOM", "4974");
-        put("SUIT", "4971");
-        put("ACCESSORIES", "4975");
+        put("OUTER", "42");
+        put("TEE/TOP", "43");
+        put("DRESS", "44");
+        put("BOTTOM", "45");
+        put("TRAINING", "60");
+        put("SWIM WEAR", "57");
+        put("SHOES", "46");
+        put("BAG", "48");
+        put("ACCESSORY", "47");
+        put("HAT", "56");
     }};
 
     private final ItemServiceImpl commonCrawlingService;
 
-    public CustomMellowCrawlingService(final ItemServiceImpl commonCrawlingService) {
+    public LookAtMinCrawlingService(final ItemServiceImpl commonCrawlingService) {
         this.commonCrawlingService = commonCrawlingService;
     }
 
@@ -46,7 +46,6 @@ public class CustomMellowCrawlingService implements CrawlingService {
 
         List<Item> allProductList = new ArrayList<>();
 
-        /*
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
             for (int pageNo = 0;; pageNo++) {
                 List<Item> productList = crawlAllProductsInOneCategory(pageNo, c);
@@ -54,8 +53,6 @@ public class CustomMellowCrawlingService implements CrawlingService {
                 allProductList.addAll(productList);
             }
         }
-
-         */
 
         /*
         for (Map.Entry<String, String> c : categoryMap.entrySet()) {
@@ -83,15 +80,15 @@ public class CustomMellowCrawlingService implements CrawlingService {
     @Override
     public List<Item> crawlAllProductsInOneCategory(final int pageNo, final Map.Entry<String, String> category) throws IOException {
 
-        String fullUrl = url + category.getValue() + "?page=" + pageNo;
+        String fullUrl = url + "cate_no=" + category.getValue() + "&page=" + pageNo;
 
         // 크롤링시 사용할 Selector 객체 생성
         Selector selector = Selector.builder()
-                .topNode(new ArrayList<>(Arrays.asList(".cHbJxO > div")))
-                .title(new ArrayList<>(Arrays.asList("a .dnwUOg")))
-                .price(new ArrayList<>(Arrays.asList("a .djyfFL")))
-                .imageUrl(new ArrayList<>())
-                .link(new ArrayList<>(Arrays.asList("a")))
+                .topNode(new ArrayList<>(Arrays.asList(".prdList > li")))
+                .title(new ArrayList<>(Arrays.asList(".description > strong", "a > span:eq(1)")))
+                .price(new ArrayList<>(Arrays.asList(".description > ul > li:last-child > span")))
+                .imageUrl(new ArrayList<>(Arrays.asList(".thumbnail > div > a > img")))
+                .link(new ArrayList<>(Arrays.asList(".thumbnail > div > a")))
                 .extraImageUrl(new ArrayList<>(Arrays.asList(".d_proimage img")))
                 .description(new ArrayList<>(Arrays.asList("#detailArea", ".cont > p")))
                 .size(new ArrayList<>(Arrays.asList(".ec-product-disabled", "span")))
@@ -110,30 +107,27 @@ public class CustomMellowCrawlingService implements CrawlingService {
         // 필드 로컬 작업
         for (Item item : itemList) {
 
-            item.setPrice(item.getPrice().replace("원", "").replace(",", ""));
+            String priceStr = item.getPrice().replace("원 ", "");
 
-            item.setLink("https://www.kolonmall.com" + item.getLink());
+            priceStr = priceStr.replace(",", "");
 
-            item.setMallNm("커스텀멜로우");
+            item.setPrice(priceStr);
 
-            item.setMallNo("0005");
+            item.setImageUrl("https://" + item.getImageUrl().substring(2));
 
-            item.setId(item.getMallNo() + item.getLink().split("\\/")[4].split("\\?")[0]);
+            item.setLink("https://www.lookatmin.com" + item.getLink());
+
+            item.setMallNo("0003");
+
+            item.setId(item.getMallNo() + item.getLink().split("/")[5]);
+
+            item.setMallNm("룩앳민");
 
             item.setCategory(category.getKey());
-
-            Document doc = Jsoup.connect(item.getLink()).get();
-            elements = doc.select(".box-img");
-
-            WebDriver driver = new FirefoxDriver();
-            driver.get("https://www.google.com");
-            System.out.println(driver.getPageSource());
 
             // extra 필드 추가
             item.setProductExtra(commonCrawlingService.setExtraFields(selector, item.getLink(), host));
         }
-
         return itemList;
     }
 }
-

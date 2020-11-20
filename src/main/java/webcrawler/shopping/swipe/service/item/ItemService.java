@@ -1,9 +1,9 @@
-package webcrawler.shopping.swipe.service;
+package webcrawler.shopping.swipe.service.item;
 
 import org.jsoup.select.Elements;
 import webcrawler.shopping.swipe.domain.CrawlingApiAccessLog;
-import webcrawler.shopping.swipe.domain.Item;
-import webcrawler.shopping.swipe.domain.Tag;
+import webcrawler.shopping.swipe.domain.item.model.Item;
+import webcrawler.shopping.swipe.domain.tag.model.Tag;
 import webcrawler.shopping.swipe.model.ItemIdImageUrlMap;
 import webcrawler.shopping.swipe.model.ProductExtra;
 import webcrawler.shopping.swipe.model.Selector;
@@ -28,5 +28,5 @@ public interface ItemService {
 
     List<ItemIdImageUrlMap> get100ItemsIdImageUrlMap();
 
-    void deleteTag(final Tag tag, final String itemId) throws IOException;
+    void updateTagList(final List<Tag> tagList, final String itemId) throws IOException;
 }

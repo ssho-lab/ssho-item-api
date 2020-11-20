@@ -1,9 +1,10 @@
-package webcrawler.shopping.swipe.domain;
+package webcrawler.shopping.swipe.domain.item.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import webcrawler.shopping.swipe.domain.tag.model.Tag;
 import webcrawler.shopping.swipe.model.ProductExtra;
 
 import java.util.List;
@@ -49,7 +50,7 @@ public class Item implements Comparable<Item> {
             if(Integer.parseInt(uniqueIdA) > Integer.parseInt(uniqueIdB)){
                 return 1;
             }
-            else{
+            else {
                 return -1;
             }
         }
